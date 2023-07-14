@@ -66,10 +66,7 @@ class BitLoc(FormText):
 class BitHeader(FormText):
     def change_header(self, bits):
         bit_set = set(bit.get('1.0') for bit in bits)
-        if len(bit_set) > 1:
-            self.configure(bg='#ffaaff')
-        else:
-            self.configure(bg='#ffffff')
+        self.configure(bg='#ffaaff' if len(bit_set) > 1 else '#ffffff')
 
 
 class NumRes(FormText): 
