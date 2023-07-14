@@ -89,7 +89,7 @@ class NumRes(FormText):
 
 
 class NumShift:
-    def __init__(self, master=None, row=1, base=16, **kwargs):
+    def __init__(self, master=None, row=1, base=16, data_width=32, **kwargs):
         self.l_shift = Button(
             master, text='左移', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
@@ -103,9 +103,9 @@ class NumShift:
         self.shift_num = Text(master, **default_param, bd=1)
         self.shift_num.tag_configure("center", justify='center')
         self.shift_num.insert('1.0', '1', 'center')
-        self.l_shift.grid(row=row, column=35)
-        self.shift_num.grid(row=row, column=36)
-        self.r_shift.grid(row=row, column=37)
+        self.l_shift.grid(row=row, column=data_width + 3)
+        self.shift_num.grid(row=row, column=data_width + 4)
+        self.r_shift.grid(row=row, column=data_width + 5)
         self.base = base
 
     def shift(self, mode, num_text, bits, function):
@@ -126,7 +126,7 @@ class UIForm:
         self.base_sel['value'] = ('16进制', '10进制', '8进制')
         self.base_sel.current(0)
         self.base_sel.bind('<<ComboboxSelected>>', self.change_base)
-        self.base_sel.grid(row=0, column=33)
+        self.base_sel.grid(row=0, column=self.data_width + 1)
         base = self.base_sel.get()
         self.base = base_map[base][1]
         for i in range(self.data_width):
@@ -156,53 +156,55 @@ class UIForm:
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.clear, row=0)
         )
-        self.clear_button_f.grid(row=1, column=34)
+        self.clear_button_f.grid(row=1, column=self.data_width + 2)
         self.clear_button_s = Button(
             master, text='清除', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.clear, row=1)
         )
-        self.clear_button_s.grid(row=2, column=34)
+        self.clear_button_s.grid(row=2, column=self.data_width + 2)
         self.shift_f = NumShift(
             master, num_text=self.num_res[0],
             bits=[bits[0] for bits in self.bits],
-            function=self.update_ui_click, base=self.base
+            function=self.update_ui_click, base=self.base,
+            data_width=self.data_width
         )
         self.shift_s = NumShift(
             master, row=2, num_text=self.num_res[1],
             bits=[bits[1] for bits in self.bits],
-            function=self.update_ui_click, base=self.base
+            function=self.update_ui_click, base=self.base,
+            data_width=self.data_width
         )
         self.in_f = Button(
             master, text='取反', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.invert, row=0)
         )
-        self.in_f.grid(row=1, column=38)
+        self.in_f.grid(row=1, column=self.data_width + 6)
         self.in_s = Button(
             master, text='取反', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.invert, row=1)
         )
-        self.in_s.grid(row=2, column=38)
+        self.in_s.grid(row=2, column=self.data_width + 6)
         self.re_f = Button(
             master, text='反向', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.reverse, row=0)
         )
-        self.re_f.grid(row=1, column=39)
+        self.re_f.grid(row=1, column=self.data_width + 7)
         self.re_s = Button(
             master, text='反向', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.reverse, row=1)
         )
-        self.re_s.grid(row=2, column=39)
+        self.re_s.grid(row=2, column=self.data_width + 7)
         self.re_s = Button(
             master, text='反向', bg=bit_bg_map['0'],
             height=1, width=4, relief='solid', bd=0,
             command=func_handler(self.reverse, row=1)
         )
-        self.re_s.grid(row=2, column=39)
+        self.re_s.grid(row=2, column=self.data_width + 7)
 
     def update_ui_click(self, _):
         for i in range(self.data_width):
