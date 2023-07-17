@@ -235,7 +235,7 @@ class UIForm:
     def clear(self, row):
         self.num_res[row].delete('1.0', 'end')
         self.num_res[row].insert('1.0', '0x0', 'center')
-        for i in range(32):
+        for i in range(self.data_width):
             self.bits[i][row].configure(state='normal')
             self.bits[i][row].delete('1.0')
             self.bits[i][row].insert('1.0', '0', 'center')
