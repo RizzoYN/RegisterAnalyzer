@@ -29,10 +29,6 @@ base_func = {
 }
 
 
-# def event_handler(func, **kwargs):
-#     return lambda event, fun=func: fun(event, **kwargs)
-
-
 def func_handler(func, **kwargs):
     return lambda fun=func: fun(**kwargs)
 
