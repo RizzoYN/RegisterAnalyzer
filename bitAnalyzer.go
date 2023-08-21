@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
-	// "strconv"
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
@@ -13,10 +13,10 @@ const (
 	padx     = 4
 	pady     = 4
 	bitBgX   = 20
-	bitBgY   = 20
+	bitBgY   = 25
 	bitWidth = 32
 	winX     = bitWidth * (bitBgX + padx)
-	winY     = bitBgY * 3 + pady * 2
+	winY     = bitBgY*3 + pady*2 + 50
 )
 
 var (
@@ -29,18 +29,19 @@ var (
 	Row = 2
 )
 
-
 type TMainForm struct {
 	*vcl.TForm
 	BitLocs        [][]*vcl.TMemo
 	BitHeader      []*vcl.TMemo
 	BitNum         []*vcl.TEdit
-	BaseChoise     *vcl.TCheckGroup
+	BaseChoise     *vcl.TRadioGroup
 	LeftShfits     []*vcl.TButton
 	ShiftNums      []*vcl.TEdit
 	RightShfits    []*vcl.TButton
 	ReverseButtons []*vcl.TButton
 	InvertButtons  []*vcl.TButton
+	ClearButtons   []*vcl.TButton
+	base           string
 }
 
 var mainForm *TMainForm
@@ -59,8 +60,9 @@ func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 	f.initComponents(f, f, bitWidth, Row, color)
 }
 
-func (f *TMainForm)newMemo(owner vcl.IComponent, parent vcl.IWinControl, x, y, w, h, ix int32, row int, color types.TColor, text string) *vcl.TMemo {
+func (f *TMainForm) newMemo(owner vcl.IComponent, parent vcl.IWinControl, x, y, w, h, ix int32, row int, color types.TColor, text string) *vcl.TMemo {
 	memo := vcl.NewMemo(owner)
+	menu := vcl.NewPopupMenu(owner)
 	var maxLength int32
 	if row == 0 {
 		maxLength = 3
@@ -68,20 +70,22 @@ func (f *TMainForm)newMemo(owner vcl.IComponent, parent vcl.IWinControl, x, y, w
 		maxLength = 1
 	}
 	memo.SetParent(parent)
+	memo.SetPopupMenu(menu)
 	memo.SetTextBuf(text)
 	memo.SetColor(color)
 	memo.SetMaxLength(maxLength)
 	memo.SetAlignment(types.TaCenter)
 	memo.SetReadOnly(true)
-	memo.SetBounds(x + ix % bitWidth * w, y + int32(row) * h, w, h)
-	memo.SetHideSelection(true)
+	memo.SetBounds(x+ix%bitWidth*w, y+int32(row)*h, w, h)
 	memo.SetComponentIndex(ix)
 	if ix < bitWidth {
 		memo.SetBorderStyle(types.BsNone)
+		memo.SetHeight(18)
 		memo.SetControlState(types.CsNoStdEvents)
 	} else {
 		memo.SetOnClick(f.Clicked)
 	}
+	memo.SetHideSelection(true)
 	return memo
 }
 
@@ -94,23 +98,47 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	rshifts := make([]*vcl.TButton, rows)
 	reverse := make([]*vcl.TButton, rows)
 	invert := make([]*vcl.TButton, rows)
+	clear := make([]*vcl.TButton, rows)
 	for r := 0; r <= rows; r++ {
 		if r == 0 {
 			for col := 0; col < cols; col++ {
-				ix := int32(r * bitWidth + col)
-				headers[col] = f.newMemo(owner, parent, padx, pady, bitBgX, bitBgY, ix, r, color["same"], fmt.Sprint(bitWidth - col - 1))
+				ix := int32(r*bitWidth + col)
+				headers[col] = f.newMemo(owner, parent, padx, pady, bitBgX, bitBgY, ix, r, color["same"], fmt.Sprint(bitWidth-col-1))
 			}
-			
 		} else {
 			bitRow := make([]*vcl.TMemo, cols)
 			for col := 0; col < cols; col++ {
-				ix := int32(r * bitWidth + col)
+				ix := int32(r*bitWidth + col)
 				bitRow[col] = f.newMemo(owner, parent, padx, pady, bitBgX, bitBgY, ix, r, color["0"], "0")
 			}
-			bits[r - 1] = bitRow
-			nums[r - 1] = nil
-		}				
+			bits[r-1] = bitRow
+			numEdit := vcl.NewEdit(owner)
+			numEdit.SetParent(parent)
+			numEdit.SetBounds(padx+bitWidth*bitBgX, padx+int32(r)*bitBgY, 120, bitBgY)
+			numEdit.SetOnKeyPress(f.Typed)
+			nums[r-1] = numEdit
+			clear[r-1] = nil
+		}
 	}
+	checkgroup := vcl.NewRadioGroup(owner)
+	checkgroup.SetParent(parent)
+	checkgroup.SetCaption("进制")
+	checkgroup.SetBounds(int32(winX/2-60), winY-50, 120, 46)
+	checkgroup.SetColumns(3)
+	checkbutton16 := vcl.NewRadioButton(checkgroup)
+	checkbutton16.SetParent(checkgroup)
+	checkbutton16.SetCaption("16")
+	checkbutton16.SetChecked(true)
+	checkbutton16.SetOnClick(f.BaseChange)
+	checkbutton10 := vcl.NewRadioButton(checkgroup)
+	checkbutton10.SetParent(checkgroup)
+	checkbutton10.SetCaption("10")
+	checkbutton10.SetOnClick(f.BaseChange)
+	checkbutton8 := vcl.NewRadioButton(checkgroup)
+	checkbutton8.SetParent(checkgroup)
+	checkbutton8.SetCaption("8")
+	checkbutton8.SetOnClick(f.BaseChange)
+	f.BaseChoise = checkgroup
 	f.BitHeader = headers
 	f.BitLocs = bits
 	f.BitNum = nums
@@ -119,9 +147,11 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	f.RightShfits = rshifts
 	f.ReverseButtons = reverse
 	f.InvertButtons = invert
+	f.ClearButtons = clear
+	f.base = "16"
 }
 
-func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
+func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	var str string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, 32)
@@ -129,7 +159,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 	fmt.Println(res)
 }
 
-func (f *TMainForm)Clicked(sender vcl.IObject) {
+func (f *TMainForm) Clicked(sender vcl.IObject) {
 	var str string
 	bitMap := make(map[string]int, Row)
 	bit := vcl.AsMemo(sender)
@@ -144,7 +174,7 @@ func (f *TMainForm)Clicked(sender vcl.IObject) {
 	}
 	bit.SetAlignment(types.TaCenter)
 	ix := bit.ComponentIndex() % bitWidth
-	rowIx := int(bit.ComponentIndex() / 32) - 1
+	rowIx := int(bit.ComponentIndex()/32) - 1
 	for i := 0; i < Row; i++ {
 		var bitString string
 		f.BitLocs[i][ix].GetTextBuf(&bitString, 2)
@@ -162,5 +192,42 @@ func (f *TMainForm)Clicked(sender vcl.IObject) {
 		bitList[i] = bitString
 	}
 	binStr := strings.Join(bitList, "")
-	fmt.Println(binStr)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth)
+	switch f.base {
+	case "16":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
+	case "10":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(bin))
+	case "8":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
+	}
+}
+
+func (f *TMainForm) BaseChange(sender vcl.IObject) {
+	var str string
+	ra := vcl.AsRadioButton(sender)
+	ra.GetTextBuf(&str, 4)
+	for i := 0; i < Row; i++ {
+		var bitString string
+		var base int
+		f.BitNum[i].GetTextBuf(&bitString, bitWidth*2)
+		switch f.base {
+		case "10":
+			base = 10
+		case "8":
+			base = 8
+		default:
+			base = 16
+		}
+		num, _ := strconv.ParseInt(bitString, base, bitWidth)
+		switch str {
+		case "16":
+			f.BitNum[i].SetTextBuf(fmt.Sprintf("%x", num))
+		case "10":
+			f.BitNum[i].SetTextBuf(fmt.Sprint(num))
+		case "8":
+			f.BitNum[i].SetTextBuf(fmt.Sprintf("%o", num))
+		}
+	}
+	f.base = str
 }
