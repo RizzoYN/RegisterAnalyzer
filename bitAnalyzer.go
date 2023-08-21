@@ -8,6 +8,7 @@ import (
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
+	"github.com/ying32/govcl/vcl/types/keys"
 )
 
 const (
@@ -17,7 +18,7 @@ const (
 	bitBgY    = 25
 	bitWidth  = 32
 	bitNumEdX = int32(2.5 * bitWidth) + 10
-	ButtonS   = 40
+	ButtonS   = 30
 	winX      = (bitWidth+1)*bitBgX+2*padx + bitNumEdX + 5*ButtonS
 	winY      = bitBgY*3 + pady*2 + 50 // bitBgY*(Row+1) + pady*Row + 50
 )
@@ -193,8 +194,12 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	var str string
 	num := vcl.AsEdit(sender)
-	num.GetTextBuf(&str, 32)
-	res := str + string(rune(*key))
+	num.GetTextBuf(&str, bitWidth)
+	keyNum := rune(*key)
+	res := str + string(keyNum)
+	if (keyNum == keys.VkBack) && (len(str) > 0) {
+		res = str[:len(str) - 1]
+	}
 	fmt.Println(res)
 }
 
@@ -318,6 +323,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	case 8:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", num))
 	}
+	
 }
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
