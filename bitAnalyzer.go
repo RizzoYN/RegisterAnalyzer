@@ -195,12 +195,43 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	var str string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, bitWidth)
+	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
 	keyNum := rune(*key)
 	res := str + string(keyNum)
 	if (keyNum == keys.VkBack) && (len(str) > 0) {
 		res = str[:len(str) - 1]
 	}
-	fmt.Println(res)
+	resNum, _ := strconv.ParseInt(res, f.base, bitWidth)
+	resNum &= 0xffffffff
+	binStr := strconv.FormatInt(resNum, 2)
+	n := len(binStr)
+	sum := 0
+	for c := bitWidth - 1; c >= 0; c-- {
+		bitMap := make(map[string]int, Row)
+		for r := 0; r < Row; r++ {
+			var binString string
+			f.BitLocs[r][c].GetTextBuf(&binString, 2)
+			if r == rowIx {
+				if sum < n {
+					s := string(binStr[n - sum - 1])
+					f.BitLocs[r][c].SetTextBuf(s)
+					f.BitLocs[r][c].SetColor(color[s])
+					binString = s
+				} else {
+					f.BitLocs[r][c].SetTextBuf("0")
+					f.BitLocs[r][c].SetColor(color["0"])
+					binString = "0"
+				}
+			}
+			bitMap[binString] = 0
+		}
+		if len(bitMap) == 1 {
+			f.BitHeader[c].SetColor(color["same"])
+		} else {
+			f.BitHeader[c].SetColor(color["diff"])
+		}
+		sum++
+	}
 }
 
 func (f *TMainForm) Clicked(sender vcl.IObject) {
@@ -314,6 +345,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	case 35:
 		num >>= shiftNum
 	}
+	num &= 0xffffffff
 	f.BitNum[rowIx].Clear()
 	switch f.base {
 	case 16:
@@ -322,6 +354,35 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(num))
 	case 8:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", num))
+	}
+	binStr := strconv.FormatInt(num, 2)
+	n := len(binStr)
+	sum := 0
+	for c := bitWidth - 1; c >= 0; c-- {
+		bitMap := make(map[string]int, Row)
+		for r := 0; r < Row; r++ {
+			var binString string
+			f.BitLocs[r][c].GetTextBuf(&binString, 2)
+			if r == rowIx {
+				if sum < n {
+					s := string(binStr[n - sum - 1])
+					f.BitLocs[r][c].SetTextBuf(s)
+					f.BitLocs[r][c].SetColor(color[s])
+					binString = s
+				} else {
+					f.BitLocs[r][c].SetTextBuf("0")
+					f.BitLocs[r][c].SetColor(color["0"])
+					binString = "0"
+				}
+			}
+			bitMap[binString] = 0
+		}
+		if len(bitMap) == 1 {
+			f.BitHeader[c].SetColor(color["same"])
+		} else {
+			f.BitHeader[c].SetColor(color["diff"])
+		}
+		sum++
 	}
 	
 }
