@@ -202,14 +202,23 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	case 16:
 		if keys.Vk0 <= keyNum &&  keyNum <= keys.VkF {
 			res = str + string(keyNum)
+		} else {
+			num.Clear()
+			num.SetTextBuf(str)
 		}
 	case 10:
 		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk9 {
 			res = str + string(keyNum)
+		} else {
+			num.Clear()
+			num.SetTextBuf(str)
 		}
 	case 8:
 		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk7 {
 			res = str + string(keyNum)
+		} else {
+			num.Clear()
+			num.SetTextBuf(str)
 		}
 	}
 	if (keyNum == keys.VkBack) && (len(str) > 0) {
