@@ -45,7 +45,7 @@ type TMainForm struct {
 	ReverseButtons []*vcl.TButton
 	InvertButtons  []*vcl.TButton
 	ClearButtons   []*vcl.TButton
-	base           string
+	base           int
 }
 
 var mainForm *TMainForm
@@ -187,7 +187,7 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	f.ReverseButtons = reverse
 	f.InvertButtons = invert
 	f.ClearButtons = clear
-	f.base = "16"
+	f.base = 16
 }
 
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
@@ -231,13 +231,13 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 		bitList[i] = bitString
 	}
 	binStr := strings.Join(bitList, "")
-	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth)
 	switch f.base {
-	case "16":
+	case 16:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
-	case "10":
+	case 10:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(bin))
-	case "8":
+	case 8:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
 	}
 }
@@ -248,17 +248,8 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 	ra.GetTextBuf(&str, 4)
 	for i := 0; i < Row; i++ {
 		var bitString string
-		var base int
-		f.BitNum[i].GetTextBuf(&bitString, bitWidth*2)
-		switch f.base {
-		case "10":
-			base = 10
-		case "8":
-			base = 8
-		default:
-			base = 16
-		}
-		num, _ := strconv.ParseInt(bitString, base, bitWidth*2)
+		f.BitNum[i].GetTextBuf(&bitString, bitWidth)
+		num, _ := strconv.ParseInt(bitString, f.base, bitWidth)
 		switch str {
 		case "16":
 			f.BitNum[i].SetTextBuf(fmt.Sprintf("%x", num))
@@ -268,7 +259,8 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 			f.BitNum[i].SetTextBuf(fmt.Sprintf("%o", num))
 		}
 	}
-	f.base = str
+	base, _ := strconv.ParseInt(str, 10, 12)
+	f.base = int(base)
 }
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
@@ -302,7 +294,31 @@ func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 	}
 }
 
-func (f *TMainForm) ClickShift(sender vcl.IObject) {}
+func (f *TMainForm) ClickShift(sender vcl.IObject) {
+	shift := vcl.AsButton(sender)
+	rowIx := int((shift.ComponentIndex() - int32(FirstIdx)) / 49)
+	col := (shift.ComponentIndex() - int32(FirstIdx)) % 39
+	var str string
+	f.ShiftNums[rowIx].GetTextBuf(&str, 8)
+	shiftNum, _ := strconv.ParseInt(str, 10, 16)
+	f.BitNum[rowIx].GetTextBuf(&str, bitWidth*32)
+	num, _ := strconv.ParseInt(str, f.base, bitWidth)
+	switch col {
+	case 33:
+		num <<= shiftNum
+	case 35:
+		num >>= shiftNum
+	}
+	f.BitNum[rowIx].Clear()
+	switch f.base {
+	case 16:
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", num))
+	case 10:
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(num))
+	case 8:
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", num))
+	}
+}
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	rev := vcl.AsButton(sender)
@@ -327,13 +343,13 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 		}
 	}
 	binStr := strings.Join(bins, "")
-	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth)
 	switch f.base {
-	case "16":
+	case 16:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
-	case "10":
+	case 10:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(bin))
-	case "8":
+	case 8:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
 	}
 	for i, bin := range(bins) {
