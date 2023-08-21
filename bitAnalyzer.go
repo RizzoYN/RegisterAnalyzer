@@ -193,11 +193,25 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	var str string
+	var res string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, bitWidth)
 	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
 	keyNum := rune(*key)
-	res := str + string(keyNum)
+	switch f.base {
+	case 16:
+		if keys.Vk0 <= keyNum &&  keyNum <= keys.VkF {
+			res = str + string(keyNum)
+		}
+	case 10:
+		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk9 {
+			res = str + string(keyNum)
+		}
+	case 8:
+		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk7 {
+			res = str + string(keyNum)
+		}
+	}
 	if (keyNum == keys.VkBack) && (len(str) > 0) {
 		res = str[:len(str) - 1]
 	}
