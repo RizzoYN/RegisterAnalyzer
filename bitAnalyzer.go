@@ -201,7 +201,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	if (keyNum == keys.VkBack) && (len(str) > 0) {
 		res = str[:len(str) - 1]
 	}
-	resNum, _ := strconv.ParseInt(res, f.base, bitWidth)
+	resNum, _ := strconv.ParseInt(res, f.base, bitWidth*2)
 	resNum &= 0xffffffff
 	binStr := strconv.FormatInt(resNum, 2)
 	n := len(binStr)
@@ -338,7 +338,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	f.ShiftNums[rowIx].GetTextBuf(&str, 8)
 	shiftNum, _ := strconv.ParseInt(str, 10, 16)
 	f.BitNum[rowIx].GetTextBuf(&str, bitWidth*32)
-	num, _ := strconv.ParseInt(str, f.base, bitWidth)
+	num, _ := strconv.ParseInt(str, f.base, bitWidth * 2)
 	switch col {
 	case 33:
 		num <<= shiftNum
