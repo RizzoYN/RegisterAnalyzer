@@ -19,7 +19,7 @@ const (
 	bitNumEdX = int32(2.5 * bitWidth) + 10
 	ButtonS   = 40
 	winX      = (bitWidth+1)*bitBgX+2*padx + bitNumEdX + 5*ButtonS
-	winY      = bitBgY*4 + pady*3 + 50
+	winY      = bitBgY*3 + pady*2 + 50 // bitBgY*(Row+1) + pady*Row + 50
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 		"diff": types.TColor(0xff00ff),
 		"same": types.TColor(0xf0f0f0),
 	}
-	Row = 3
+	Row = 2
 	FirstIdx = Row * bitWidth + 64
 )
 
@@ -202,7 +202,6 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 	var str string
 	bitMap := make(map[string]int, Row)
 	bit := vcl.AsMemo(sender)
-	fmt.Println(bit.ComponentIndex())
 	bit.GetTextBuf(&str, 2)
 	bit.SetMaxLength(2)
 	if str == "1" {
@@ -247,7 +246,6 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 	var str string
 	ra := vcl.AsRadioButton(sender)
 	ra.GetTextBuf(&str, 4)
-	fmt.Println(ra.ComponentIndex())
 	for i := 0; i < Row; i++ {
 		var bitString string
 		var base int
@@ -296,8 +294,50 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	}
 }
 
-func (f *TMainForm) ClickInvert(sender vcl.IObject) {}
+func (f *TMainForm) ClickInvert(sender vcl.IObject) {
+	inv := vcl.AsButton(sender)
+	rowIx := int((inv.ComponentIndex() - int32(FirstIdx)) / 49)
+	for i := 0; i < bitWidth; i++ {
+		f.Clicked(f.BitLocs[rowIx][i])
+	}
+}
 
 func (f *TMainForm) ClickShift(sender vcl.IObject) {}
 
-func (f *TMainForm) ClickReverse(sender vcl.IObject) {}
+func (f *TMainForm) ClickReverse(sender vcl.IObject) {
+	rev := vcl.AsButton(sender)
+	rowIx := int((rev.ComponentIndex() - int32(FirstIdx)) / 49)
+	bins := make([]string, bitWidth)
+	for c := 0; c < bitWidth; c++ {
+		bitMap := make(map[string]int, Row)
+		for i := 0; i < Row; i++ {
+			var str string
+			if i == rowIx {
+				f.BitLocs[i][c].GetTextBuf(&str, 2)
+				bins[bitWidth - c - 1] = str
+			} else {
+				f.BitLocs[i][bitWidth - c - 1].GetTextBuf(&str, 2)
+			}
+			bitMap[str] = 0
+		}
+		if len(bitMap) == 1 {
+			f.BitHeader[bitWidth - c - 1].SetColor(color["same"])
+		} else {
+			f.BitHeader[bitWidth - c - 1].SetColor(color["diff"])
+		}
+	}
+	binStr := strings.Join(bins, "")
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
+	switch f.base {
+	case "16":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
+	case "10":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprint(bin))
+	case "8":
+		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
+	}
+	for i, bin := range(bins) {
+		f.BitLocs[rowIx][i].SetTextBuf(bin)
+		f.BitLocs[rowIx][i].SetColor(color[bin])
+	}
+}
