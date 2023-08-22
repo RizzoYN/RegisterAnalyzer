@@ -29,11 +29,11 @@ var (
 		"diff": types.TColor(0xff00ff),
 		"same": types.TColor(0xf0f0f0),
 	}
-	maxLength = map[int]int{
-		16: 8,
-		10: 10,
-		8: 11,
-	}
+	// maxLength = map[int]int{
+	// 	16: 8,
+	// 	10: 10,
+	// 	8: 11,
+	// }
 	Row = 2
 	FirstIdx = Row * bitWidth + 64
 )
@@ -126,7 +126,7 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			numEdit.SetParent(parent)
 			numEdit.SetBounds(padx+bitWidth*bitBgX, padx+int32(r)*bitBgY, bitNumEdX, bitBgY)
 			numEdit.SetOnKeyUp(f.Typed)
-			numEdit.SetMaxLength(int32(maxLength[f.base]))
+			// numEdit.SetMaxLength(int32(maxLength[f.base]))
 			lshift := vcl.NewButton(owner)
 			lshift.SetParent(parent)
 			lshift.SetBounds(padx+bitWidth*bitBgX+bitNumEdX, padx+int32(r)*bitBgY, ButtonS, bitBgY)
