@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"regexp"
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
@@ -33,9 +32,9 @@ var (
 	// 	10: 10,
 	// 	8: 11,
 	// }
-	Row      = 1
+	Row      = 2
 	winY     = int32(bitBgY*(Row+1)+pady*Row) + 50
-	re       = regexp.MustCompile("[0-9]+")
+	FirstIdx = Row*bitWidth + 64
 )
 
 type TMainForm struct {
@@ -51,8 +50,8 @@ type TMainForm struct {
 	InvertButtons  []*vcl.TButton
 	ClearButtons   []*vcl.TButton
 	base           int
-	AddRow         *vcl.TButton
-	RmRow          *vcl.TButton
+	// AddRow         *vcl.TButton
+	// RmRow          *vcl.TButton
 }
 
 var mainForm *TMainForm
@@ -128,14 +127,12 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			numEdit.SetParent(parent)
 			numEdit.SetBounds(padx+bitWidth*bitBgX, padx+int32(r)*bitBgY, bitNumEdX, bitBgY)
 			numEdit.SetOnKeyUp(f.Typed)
-			numEdit.SetName(fmt.Sprintf("numEdit%d", r-1))
 			// numEdit.SetMaxLength(int32(maxLength[f.base]))
 			lshift := vcl.NewButton(owner)
 			lshift.SetParent(parent)
 			lshift.SetBounds(padx+bitWidth*bitBgX+bitNumEdX, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			lshift.SetTextBuf("<<")
 			lshift.SetOnClick(f.ClickShift)
-			lshift.SetName(fmt.Sprintf("lshift%d", r-1))
 			shiftnum := vcl.NewEdit(owner)
 			shiftnum.SetParent(parent)
 			shiftnum.SetBounds(padx+bitWidth*bitBgX+bitNumEdX+ButtonS, padx+int32(r)*bitBgY, bitBgX, bitBgY)
@@ -147,25 +144,21 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			rshift.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			rshift.SetTextBuf(">>")
 			rshift.SetOnClick(f.ClickShift)
-			rshift.SetName(fmt.Sprintf("rshift%d", r-1))
 			rev := vcl.NewButton(owner)
 			rev.SetParent(parent)
 			rev.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*2, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			rev.SetTextBuf("倒序")
 			rev.SetOnClick(f.ClickReverse)
-			rev.SetName(fmt.Sprintf("rev%d", r-1))
 			invt := vcl.NewButton(owner)
 			invt.SetParent(parent)
 			invt.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*3, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			invt.SetTextBuf("转换")
 			invt.SetOnClick(f.ClickInvert)
-			invt.SetName(fmt.Sprintf("invt%d", r-1))
 			cler := vcl.NewButton(owner)
 			cler.SetParent(parent)
 			cler.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*4, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			cler.SetTextBuf("清空")
 			cler.SetOnClick(f.ClickClear)
-			cler.SetName(fmt.Sprintf("cler%d", r-1))
 			nums[r-1] = numEdit
 			lshifts[r-1] = lshift
 			shiftnums[r-1] = shiftnum
@@ -193,19 +186,19 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	checkbutton8.SetParent(checkgroup)
 	checkbutton8.SetCaption("8")
 	checkbutton8.SetOnClick(f.BaseChange)
-	addrow := vcl.NewButton(owner)
-	addrow.SetParent(parent)
-	addrow.SetBounds(padx, winY-25-bitBgY/2, ButtonS*2, bitBgY)
-	addrow.SetTextBuf("增加一行")
-	addrow.SetOnClick(f.AddR)
-	rmrow := vcl.NewButton(owner)
-	rmrow.SetParent(parent)
-	rmrow.SetBounds(padx+ButtonS*2, winY-25-bitBgY/2, ButtonS*2, bitBgY)
-	if Row == 1 {
-		rmrow.SetEnabled(false)
-	}
-	rmrow.SetTextBuf("删除一行")
-	rmrow.SetOnClick(f.RemoveR)
+	// addrow := vcl.NewButton(owner)
+	// addrow.SetParent(parent)
+	// addrow.SetBounds(padx, winY-25-bitBgY/2, ButtonS*2, bitBgY)
+	// addrow.SetTextBuf("增加一行")
+	// addrow.SetOnClick(f.AddR)
+	// rmrow := vcl.NewButton(owner)
+	// rmrow.SetParent(parent)
+	// rmrow.SetBounds(padx+ButtonS*2, winY-25-bitBgY/2, ButtonS*2, bitBgY)
+	// if Row == 1 {
+	// 	rmrow.SetEnabled(false)
+	// }
+	// rmrow.SetTextBuf("删除一行")
+	// rmrow.SetOnClick(f.RemoveR)
 	f.BaseChoise = checkgroup
 	f.BitHeader = headers
 	f.BitLocs = bits
@@ -216,17 +209,15 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	f.ReverseButtons = reverse
 	f.InvertButtons = invert
 	f.ClearButtons = clear
-	f.AddRow = addrow
-	f.RmRow = rmrow
-	f.ComponentCount()
+	// f.AddRow = addrow
+	// f.RmRow = rmrow
 }
 
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
 	var str string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, bitWidth)
-	name := re.FindString(num.Name())
-	rowIx, _ := strconv.ParseInt(name, 2, 0)
+	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
 	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
 	if err != nil && str != "" {
 		bitList := make([]string, bitWidth)
@@ -258,7 +249,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 		for r := 0; r < Row; r++ {
 			var binString string
 			f.BitLocs[r][c].GetTextBuf(&binString, 2)
-			if int64(r) == rowIx {
+			if r == rowIx {
 				if sum < n {
 					s := string(binStr[n-sum-1])
 					f.BitLocs[r][c].SetTextBuf(s)
@@ -348,8 +339,7 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	cler := vcl.AsButton(sender)
-	name := re.FindString(cler.Name())
-	rowIx, _ := strconv.ParseInt(name, 2, 0)
+	rowIx := int((cler.ComponentIndex() - int32(FirstIdx)) / 49)
 	f.BitNum[rowIx].SetTextBuf("0")
 	for i := 0; i < bitWidth; i++ {
 		f.BitLocs[rowIx][i].SetTextBuf("0")
@@ -372,8 +362,7 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 
 func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 	inv := vcl.AsButton(sender)
-	name := re.FindString(inv.Name())
-	rowIx, _ := strconv.ParseInt(name, 2, 0)
+	rowIx := int((inv.ComponentIndex() - int32(FirstIdx)) / 49)
 	for i := 0; i < bitWidth; i++ {
 		f.Clicked(f.BitLocs[rowIx][i])
 	}
@@ -381,15 +370,8 @@ func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 
 func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	shift := vcl.AsButton(sender)
-	cname := shift.Name()
-	name := re.FindString(cname)
-	rowIx, _ := strconv.ParseInt(name, 2, 0)
-	var col int
-	if cname[0] == 'l' {
-		col = 0
-	} else {
-		col = 1
-	}
+	rowIx := int((shift.ComponentIndex() - int32(FirstIdx)) / 49)
+	col := (shift.ComponentIndex() - int32(FirstIdx)) % 39
 	var str string
 	f.ShiftNums[rowIx].GetTextBuf(&str, 8)
 	shiftNum, _ := strconv.ParseInt(str, 10, 16)
@@ -419,7 +401,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 		for r := 0; r < Row; r++ {
 			var binString string
 			f.BitLocs[r][c].GetTextBuf(&binString, 2)
-			if int64(r) == rowIx {
+			if r == rowIx {
 				if sum < n {
 					s := string(binStr[n-sum-1])
 					f.BitLocs[r][c].SetTextBuf(s)
@@ -444,14 +426,13 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	rev := vcl.AsButton(sender)
-	name := re.FindString(rev.Name())
-	rowIx, _ := strconv.ParseInt(name, 2, 0)
+	rowIx := int((rev.ComponentIndex() - int32(FirstIdx)) / 49)
 	bins := make([]string, bitWidth)
 	for c := 0; c < bitWidth; c++ {
 		bitMap := make(map[string]int, Row)
 		for i := 0; i < Row; i++ {
 			var str string
-			if int64(i) == rowIx {
+			if i == rowIx {
 				f.BitLocs[i][c].GetTextBuf(&str, 2)
 				bins[bitWidth-c-1] = str
 			} else {
@@ -481,28 +462,28 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	}
 }
 
-func (f *TMainForm)AddR(sender vcl.IObject) {
-	if Row == 1{
-		f.RmRow.SetEnabled(true)
-	}
-	Row++
-	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
-	f.SetClientHeight(winY)
-	f.SetClientWidth(winX)
-	f.initComponents(f, f, bitWidth, Row, color)
-	f.Update()
-}
+// func (f *TMainForm)AddR(sender vcl.IObject) {
+// 	if Row == 1{
+// 		f.RmRow.SetEnabled(true)
+// 	}
+// 	Row++
+// 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+// 	f.SetClientHeight(winY)
+// 	f.SetClientWidth(winX)
+// 	f.initComponents(f, f, bitWidth, Row, color)
+// 	f.Update()
+// }
 
-func (f *TMainForm)RemoveR(sender vcl.IObject) {
-	if Row > 1 {
-		Row--
-		if Row == 1{
-			f.RmRow.SetEnabled(false)
-		}
-	}
-	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
-	f.SetClientHeight(winY)
-	f.SetClientWidth(winX)
-	f.initComponents(f, f, bitWidth, Row, color)
-	f.Update()
-}
+// func (f *TMainForm)RemoveR(sender vcl.IObject) {
+// 	if Row > 1 {
+// 		Row--
+// 		if Row == 1{
+// 			f.RmRow.SetEnabled(false)
+// 		}
+// 	}
+// 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+// 	f.SetClientHeight(winY)
+// 	f.SetClientWidth(winX)
+// 	f.initComponents(f, f, bitWidth, Row, color)
+// 	f.Update()
+// }
