@@ -29,6 +29,11 @@ var (
 		"diff": types.TColor(0xff00ff),
 		"same": types.TColor(0xf0f0f0),
 	}
+	maxLength = map[int]int{
+		16: 8,
+		10: 10,
+		8: 11,
+	}
 	Row = 2
 	FirstIdx = Row * bitWidth + 64
 )
@@ -94,6 +99,7 @@ func (f *TMainForm) newMemo(owner vcl.IComponent, parent vcl.IWinControl, x, y, 
 }
 
 func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl, cols, rows int, color map[string]types.TColor) {
+	f.base = 16
 	headers := make([]*vcl.TMemo, cols)
 	bits := make([][]*vcl.TMemo, rows)
 	nums := make([]*vcl.TEdit, rows)
@@ -119,7 +125,8 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			numEdit := vcl.NewEdit(owner)
 			numEdit.SetParent(parent)
 			numEdit.SetBounds(padx+bitWidth*bitBgX, padx+int32(r)*bitBgY, bitNumEdX, bitBgY)
-			numEdit.SetOnKeyPress(f.Typed)
+			numEdit.SetOnKeyUp(f.Typed)
+			numEdit.SetMaxLength(int32(maxLength[f.base]))
 			lshift := vcl.NewButton(owner)
 			lshift.SetParent(parent)
 			lshift.SetBounds(padx+bitWidth*bitBgX+bitNumEdX, padx+int32(r)*bitBgY, ButtonS, bitBgY)
@@ -129,6 +136,7 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			shiftnum.SetParent(parent)
 			shiftnum.SetBounds(padx+bitWidth*bitBgX+bitNumEdX+ButtonS, padx+int32(r)*bitBgY, bitBgX, bitBgY)
 			shiftnum.SetTextBuf("1")
+			shiftnum.SetMaxLength(2)
 			shiftnum.SetAlignment(types.TaCenter)
 			rshift := vcl.NewButton(owner)
 			rshift.SetParent(parent)
@@ -187,18 +195,35 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	f.ReverseButtons = reverse
 	f.InvertButtons = invert
 	f.ClearButtons = clear
-	f.base = 16
 }
 
-func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
+func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
 	var str string
-	var res string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, bitWidth)
 	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
-	keyNum := rune(*key)
-	res = str + string(keyNum)
-	resNum, _ := strconv.ParseInt(res, f.base, bitWidth*2)
+	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
+	if err != nil && str != ""{
+		bitList := make([]string, bitWidth)
+		for i := 0; i < bitWidth; i++ {
+			var bitString string
+			f.BitLocs[rowIx][i].GetTextBuf(&bitString, 2)
+			bitList[i] = bitString
+		}
+		binStr := strings.Join(bitList, "")
+		bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
+		switch f.base {
+		case 16:
+			f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
+		case 10:
+			f.BitNum[rowIx].SetTextBuf(fmt.Sprint(bin))
+		case 8:
+			f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
+		}
+		var bitString string
+		f.BitNum[rowIx].GetTextBuf(&bitString, bitWidth*2)
+		resNum, _ = strconv.ParseInt(bitString, f.base, bitWidth*2)
+	}
 	resNum &= 0xffffffff
 	binStr := strconv.FormatInt(resNum, 2)
 	n := len(binStr)
