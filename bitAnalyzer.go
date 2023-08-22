@@ -8,7 +8,6 @@ import (
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
-	"github.com/ying32/govcl/vcl/types/keys"
 )
 
 const (
@@ -198,32 +197,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char) {
 	num.GetTextBuf(&str, bitWidth)
 	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
 	keyNum := rune(*key)
-	switch f.base {
-	case 16:
-		if keys.Vk0 <= keyNum &&  keyNum <= keys.VkF {
-			res = str + string(keyNum)
-		} else {
-			num.Clear()
-			num.SetTextBuf(str)
-		}
-	case 10:
-		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk9 {
-			res = str + string(keyNum)
-		} else {
-			num.Clear()
-			num.SetTextBuf(str)
-		}
-	case 8:
-		if keys.Vk0 <= keyNum &&  keyNum <= keys.Vk7 {
-			res = str + string(keyNum)
-		} else {
-			num.Clear()
-			num.SetTextBuf(str)
-		}
-	}
-	if (keyNum == keys.VkBack) && (len(str) > 0) {
-		res = str[:len(str) - 1]
-	}
+	res = str + string(keyNum)
 	resNum, _ := strconv.ParseInt(res, f.base, bitWidth*2)
 	resNum &= 0xffffffff
 	binStr := strconv.FormatInt(resNum, 2)
@@ -290,7 +264,7 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 		bitList[i] = bitString
 	}
 	binStr := strings.Join(bitList, "")
-	bin, _ := strconv.ParseInt(binStr, 2, bitWidth)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
 	switch f.base {
 	case 16:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
@@ -308,7 +282,7 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 	for i := 0; i < Row; i++ {
 		var bitString string
 		f.BitNum[i].GetTextBuf(&bitString, bitWidth)
-		num, _ := strconv.ParseInt(bitString, f.base, bitWidth)
+		num, _ := strconv.ParseInt(bitString, f.base, bitWidth*2)
 		switch str {
 		case "16":
 			f.BitNum[i].SetTextBuf(fmt.Sprintf("%x", num))
@@ -318,7 +292,7 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 			f.BitNum[i].SetTextBuf(fmt.Sprintf("%o", num))
 		}
 	}
-	base, _ := strconv.ParseInt(str, 10, 12)
+	base, _ := strconv.ParseInt(str, 10, 16)
 	f.base = int(base)
 }
 
@@ -433,7 +407,7 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 		}
 	}
 	binStr := strings.Join(bins, "")
-	bin, _ := strconv.ParseInt(binStr, 2, bitWidth)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth * 2)
 	switch f.base {
 	case 16:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
