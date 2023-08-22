@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"regexp"
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
@@ -34,6 +35,7 @@ var (
 	// }
 	Row      = 1
 	winY     = int32(bitBgY*(Row+1)+pady*Row) + 50
+	re       = regexp.MustCompile("[0-9]+")
 )
 
 type TMainForm struct {
@@ -126,14 +128,14 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			numEdit.SetParent(parent)
 			numEdit.SetBounds(padx+bitWidth*bitBgX, padx+int32(r)*bitBgY, bitNumEdX, bitBgY)
 			numEdit.SetOnKeyUp(f.Typed)
-			numEdit.SetName(fmt.Sprintf("numEdit %d", r-1))
+			numEdit.SetName(fmt.Sprintf("numEdit%d", r-1))
 			// numEdit.SetMaxLength(int32(maxLength[f.base]))
 			lshift := vcl.NewButton(owner)
 			lshift.SetParent(parent)
 			lshift.SetBounds(padx+bitWidth*bitBgX+bitNumEdX, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			lshift.SetTextBuf("<<")
 			lshift.SetOnClick(f.ClickShift)
-			lshift.SetName(fmt.Sprintf("lshift %d", r-1))
+			lshift.SetName(fmt.Sprintf("lshift%d", r-1))
 			shiftnum := vcl.NewEdit(owner)
 			shiftnum.SetParent(parent)
 			shiftnum.SetBounds(padx+bitWidth*bitBgX+bitNumEdX+ButtonS, padx+int32(r)*bitBgY, bitBgX, bitBgY)
@@ -145,25 +147,25 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 			rshift.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			rshift.SetTextBuf(">>")
 			rshift.SetOnClick(f.ClickShift)
-			rshift.SetName(fmt.Sprintf("rshift %d", r-1))
+			rshift.SetName(fmt.Sprintf("rshift%d", r-1))
 			rev := vcl.NewButton(owner)
 			rev.SetParent(parent)
 			rev.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*2, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			rev.SetTextBuf("倒序")
 			rev.SetOnClick(f.ClickReverse)
-			rev.SetName(fmt.Sprintf("rev %d", r-1))
+			rev.SetName(fmt.Sprintf("rev%d", r-1))
 			invt := vcl.NewButton(owner)
 			invt.SetParent(parent)
 			invt.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*3, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			invt.SetTextBuf("转换")
 			invt.SetOnClick(f.ClickInvert)
-			invt.SetName(fmt.Sprintf("invt %d", r-1))
+			invt.SetName(fmt.Sprintf("invt%d", r-1))
 			cler := vcl.NewButton(owner)
 			cler.SetParent(parent)
 			cler.SetBounds(padx+(bitWidth+1)*bitBgX+bitNumEdX+ButtonS*4, padx+int32(r)*bitBgY, ButtonS, bitBgY)
 			cler.SetTextBuf("清空")
 			cler.SetOnClick(f.ClickClear)
-			cler.SetName(fmt.Sprintf("cler %d", r-1))
+			cler.SetName(fmt.Sprintf("cler%d", r-1))
 			nums[r-1] = numEdit
 			lshifts[r-1] = lshift
 			shiftnums[r-1] = shiftnum
@@ -223,7 +225,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 	var str string
 	num := vcl.AsEdit(sender)
 	num.GetTextBuf(&str, bitWidth)
-	name := strings.Split(num.Name(), " ")[1]
+	name := re.FindString(num.Name())
 	rowIx, _ := strconv.ParseInt(name, 2, 0)
 	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
 	if err != nil && str != "" {
@@ -346,7 +348,7 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	cler := vcl.AsButton(sender)
-	name := strings.Split(cler.Name(), " ")[1]
+	name := re.FindString(cler.Name())
 	rowIx, _ := strconv.ParseInt(name, 2, 0)
 	f.BitNum[rowIx].SetTextBuf("0")
 	for i := 0; i < bitWidth; i++ {
@@ -370,7 +372,7 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 
 func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 	inv := vcl.AsButton(sender)
-	name := strings.Split(inv.Name(), " ")[1]
+	name := re.FindString(inv.Name())
 	rowIx, _ := strconv.ParseInt(name, 2, 0)
 	for i := 0; i < bitWidth; i++ {
 		f.Clicked(f.BitLocs[rowIx][i])
@@ -379,11 +381,11 @@ func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 
 func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	shift := vcl.AsButton(sender)
-	list := strings.Split(shift.Name(), " ")
-	name := list[1]
+	cname := shift.Name()
+	name := re.FindString(cname)
 	rowIx, _ := strconv.ParseInt(name, 2, 0)
 	var col int
-	if list[0][0] == 'l' {
+	if cname[0] == 'l' {
 		col = 0
 	} else {
 		col = 1
@@ -442,7 +444,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	rev := vcl.AsButton(sender)
-	name := strings.Split(rev.Name(), " ")[1]
+	name := re.FindString(rev.Name())
 	rowIx, _ := strconv.ParseInt(name, 2, 0)
 	bins := make([]string, bitWidth)
 	for c := 0; c < bitWidth; c++ {
