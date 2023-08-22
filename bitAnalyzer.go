@@ -25,8 +25,8 @@ const (
 var (
 	color = map[string]types.TColor{
 		"0":    types.TColor(0xffffff),
-		"1":    types.TColor(0xffff55),
-		"diff": types.TColor(0xff00ff),
+		"1":    types.TColor(0xffff88),
+		"diff": types.TColor(0xffaaff),
 		"same": types.TColor(0xf0f0f0),
 	}
 	// maxLength = map[int]int{
