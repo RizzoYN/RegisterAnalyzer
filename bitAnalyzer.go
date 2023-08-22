@@ -90,7 +90,7 @@ func (f *TMainForm) newMemo(owner vcl.IComponent, parent vcl.IWinControl, x, y, 
 	memo.SetComponentIndex(ix)
 	if ix < bitWidth {
 		memo.SetBorderStyle(types.BsNone)
-		memo.SetHeight(18)
+		memo.SetHeight(17)
 		memo.SetControlState(types.CsNoStdEvents)
 	} else {
 		memo.SetOnClick(f.Clicked)
@@ -340,13 +340,13 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	cler := vcl.AsButton(sender)
 	rowIx := int((cler.ComponentIndex() - int32(FirstIdx)) / 49)
-	bitMap := make(map[string]int, Row)
 	f.BitNum[rowIx].SetTextBuf("0")
 	for i := 0; i < bitWidth; i++ {
 		f.BitLocs[rowIx][i].SetTextBuf("0")
 		f.BitLocs[rowIx][i].SetColor(color["0"])
 	}
 	for c := 0; c < bitWidth; c++ {
+		bitMap := make(map[string]int, Row)
 		for i := 0; i < Row; i++ {
 			var bitString string
 			f.BitLocs[i][c].GetTextBuf(&bitString, 2)
