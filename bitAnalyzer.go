@@ -32,8 +32,8 @@ var (
 	// 	10: 10,
 	// 	8: 11,
 	// }
-	Row      = 2
-	winY     = bitBgY*(Row+1) + pady*Row + 50
+	Row      = 1
+	winY     = int32(bitBgY*(Row+1) + pady*Row) + 50
 	FirstIdx = Row*bitWidth + 64
 )
 
@@ -63,7 +63,7 @@ func main() {
 
 func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 	f.SetCaption("寄存器工具")
-	f.SetClientHeight(int32(winY))
+	f.SetClientHeight(winY)
 	f.SetClientWidth(winX)
 	f.initComponents(f, f, bitWidth, Row, color)
 }
