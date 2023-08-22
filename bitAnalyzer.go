@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 )
@@ -16,10 +15,9 @@ const (
 	bitBgX    = 20
 	bitBgY    = 25
 	bitWidth  = 32
-	bitNumEdX = int32(2.5 * bitWidth) + 10
+	bitNumEdX = int32(2.5*bitWidth) + 10
 	ButtonS   = 30
-	winX      = (bitWidth+1)*bitBgX+2*padx + bitNumEdX + 5*ButtonS
-	winY      = bitBgY*3 + pady*2 + 50 // bitBgY*(Row+1) + pady*Row + 50
+	winX      = (bitWidth+1)*bitBgX + 2*padx + bitNumEdX + 5*ButtonS
 )
 
 var (
@@ -34,8 +32,9 @@ var (
 	// 	10: 10,
 	// 	8: 11,
 	// }
-	Row = 2
-	FirstIdx = Row * bitWidth + 64
+	Row      = 2
+	winY     = bitBgY*(Row+1) + pady*Row + 50
+	FirstIdx = Row*bitWidth + 64
 )
 
 type TMainForm struct {
@@ -64,7 +63,7 @@ func main() {
 
 func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 	f.SetCaption("寄存器工具")
-	f.SetClientHeight(winY)
+	f.SetClientHeight(int32(winY))
 	f.SetClientWidth(winX)
 	f.initComponents(f, f, bitWidth, Row, color)
 }
@@ -203,7 +202,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 	num.GetTextBuf(&str, bitWidth)
 	rowIx := int((num.ComponentIndex() - int32(FirstIdx)) / 49)
 	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
-	if err != nil && str != ""{
+	if err != nil && str != "" {
 		bitList := make([]string, bitWidth)
 		for i := 0; i < bitWidth; i++ {
 			var bitString string
@@ -235,7 +234,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 			f.BitLocs[r][c].GetTextBuf(&binString, 2)
 			if r == rowIx {
 				if sum < n {
-					s := string(binStr[n - sum - 1])
+					s := string(binStr[n-sum-1])
 					f.BitLocs[r][c].SetTextBuf(s)
 					f.BitLocs[r][c].SetColor(color[s])
 					binString = s
@@ -360,7 +359,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	f.ShiftNums[rowIx].GetTextBuf(&str, 8)
 	shiftNum, _ := strconv.ParseInt(str, 10, 16)
 	f.BitNum[rowIx].GetTextBuf(&str, bitWidth*32)
-	num, _ := strconv.ParseInt(str, f.base, bitWidth * 2)
+	num, _ := strconv.ParseInt(str, f.base, bitWidth*2)
 	switch col {
 	case 33:
 		num <<= shiftNum
@@ -387,7 +386,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 			f.BitLocs[r][c].GetTextBuf(&binString, 2)
 			if r == rowIx {
 				if sum < n {
-					s := string(binStr[n - sum - 1])
+					s := string(binStr[n-sum-1])
 					f.BitLocs[r][c].SetTextBuf(s)
 					f.BitLocs[r][c].SetColor(color[s])
 					binString = s
@@ -406,7 +405,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 		}
 		sum++
 	}
-	
+
 }
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
@@ -419,20 +418,20 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 			var str string
 			if i == rowIx {
 				f.BitLocs[i][c].GetTextBuf(&str, 2)
-				bins[bitWidth - c - 1] = str
+				bins[bitWidth-c-1] = str
 			} else {
-				f.BitLocs[i][bitWidth - c - 1].GetTextBuf(&str, 2)
+				f.BitLocs[i][bitWidth-c-1].GetTextBuf(&str, 2)
 			}
 			bitMap[str] = 0
 		}
 		if len(bitMap) == 1 {
-			f.BitHeader[bitWidth - c - 1].SetColor(color["same"])
+			f.BitHeader[bitWidth-c-1].SetColor(color["same"])
 		} else {
-			f.BitHeader[bitWidth - c - 1].SetColor(color["diff"])
+			f.BitHeader[bitWidth-c-1].SetColor(color["diff"])
 		}
 	}
 	binStr := strings.Join(bins, "")
-	bin, _ := strconv.ParseInt(binStr, 2, bitWidth * 2)
+	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
 	switch f.base {
 	case 16:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%x", bin))
@@ -441,7 +440,7 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	case 8:
 		f.BitNum[rowIx].SetTextBuf(fmt.Sprintf("%o", bin))
 	}
-	for i, bin := range(bins) {
+	for i, bin := range bins {
 		f.BitLocs[rowIx][i].SetTextBuf(bin)
 		f.BitLocs[rowIx][i].SetColor(color[bin])
 	}
