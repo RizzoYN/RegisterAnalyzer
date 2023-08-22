@@ -33,7 +33,7 @@ var (
 	// 	8: 11,
 	// }
 	Row      = 2
-	winY     = int32(bitBgY*(Row+1) + pady*Row) + 50
+	winY     = int32(bitBgY*(Row+1)+pady*Row) + 50
 	FirstIdx = Row*bitWidth + 64
 )
 
@@ -50,6 +50,8 @@ type TMainForm struct {
 	InvertButtons  []*vcl.TButton
 	ClearButtons   []*vcl.TButton
 	base           int
+	// AddRow         *vcl.TButton
+	// RmRow          *vcl.TButton
 }
 
 var mainForm *TMainForm
@@ -184,6 +186,19 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	checkbutton8.SetParent(checkgroup)
 	checkbutton8.SetCaption("8")
 	checkbutton8.SetOnClick(f.BaseChange)
+	// addrow := vcl.NewButton(owner)
+	// addrow.SetParent(parent)
+	// addrow.SetBounds(padx, winY-25-bitBgY/2, ButtonS*2, bitBgY)
+	// addrow.SetTextBuf("增加一行")
+	// addrow.SetOnClick(f.AddR)
+	// rmrow := vcl.NewButton(owner)
+	// rmrow.SetParent(parent)
+	// rmrow.SetBounds(padx+ButtonS*2, winY-25-bitBgY/2, ButtonS*2, bitBgY)
+	// if Row == 1 {
+	// 	rmrow.SetEnabled(false)
+	// }
+	// rmrow.SetTextBuf("删除一行")
+	// rmrow.SetOnClick(f.RemoveR)
 	f.BaseChoise = checkgroup
 	f.BitHeader = headers
 	f.BitLocs = bits
@@ -194,6 +209,8 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	f.ReverseButtons = reverse
 	f.InvertButtons = invert
 	f.ClearButtons = clear
+	// f.AddRow = addrow
+	// f.RmRow = rmrow
 }
 
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
@@ -405,7 +422,6 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 		}
 		sum++
 	}
-
 }
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
@@ -445,3 +461,29 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 		f.BitLocs[rowIx][i].SetColor(color[bin])
 	}
 }
+
+// func (f *TMainForm)AddR(sender vcl.IObject) {
+// 	if Row == 1{
+// 		f.RmRow.SetEnabled(true)
+// 	}
+// 	Row++
+// 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+// 	f.SetClientHeight(winY)
+// 	f.SetClientWidth(winX)
+// 	f.initComponents(f, f, bitWidth, Row, color)
+// 	f.Update()
+// }
+
+// func (f *TMainForm)RemoveR(sender vcl.IObject) {
+// 	if Row > 1 {
+// 		Row--
+// 		if Row == 1{
+// 			f.RmRow.SetEnabled(false)
+// 		}
+// 	}
+// 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+// 	f.SetClientHeight(winY)
+// 	f.SetClientWidth(winX)
+// 	f.initComponents(f, f, bitWidth, Row, color)
+// 	f.Update()
+// }
