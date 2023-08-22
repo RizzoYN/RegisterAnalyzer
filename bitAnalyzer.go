@@ -32,7 +32,7 @@ var (
 	// 	10: 10,
 	// 	8: 11,
 	// }
-	Row      = 1
+	Row      = 2
 	winY     = int32(bitBgY*(Row+1) + pady*Row) + 50
 	FirstIdx = Row*bitWidth + 64
 )
