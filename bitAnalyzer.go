@@ -223,12 +223,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 	rowIx := f.GetRowIndex(num)
 	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
 	if err != nil && str != "" {
-		bitList := make([]string, bitWidth)
-		for i := 0; i < bitWidth; i++ {
-			var bitString string
-			f.BitLocs[rowIx][i].GetTextBuf(&bitString, 2)
-			bitList[i] = bitString
-		}
+		bitList := f.GetBitString(int(rowIx))
 		binStr := strings.Join(bitList, "")
 		bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
 		f.UpdateBitNum(bin, rowIx)
@@ -261,17 +256,8 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 		f.BitLocs[i][ix].GetTextBuf(&bitString, 2)
 		bitMap[bitString] = 0
 	}
-	if len(bitMap) == 1 {
-		f.BitHeader[ix].SetColor(color["same"])
-	} else {
-		f.BitHeader[ix].SetColor(color["diff"])
-	}
-	bitList := make([]string, bitWidth)
-	for i := 0; i < bitWidth; i++ {
-		var bitString string
-		f.BitLocs[rowIx][i].GetTextBuf(&bitString, 2)
-		bitList[i] = bitString
-	}
+	f.UpdateHeader(bitMap, int(ix))
+	bitList := f.GetBitString(rowIx)
 	binStr := strings.Join(bitList, "")
 	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
 	f.UpdateBitNum(bin, int64(rowIx))
@@ -307,11 +293,7 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 			f.BitLocs[i][c].GetTextBuf(&bitString, 2)
 			bitMap[bitString] = 0
 		}
-		if len(bitMap) == 1 {
-			f.BitHeader[c].SetColor(color["same"])
-		} else {
-			f.BitHeader[c].SetColor(color["diff"])
-		}
+		f.UpdateHeader(bitMap, c)
 	}
 }
 
@@ -365,11 +347,7 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 			}
 			bitMap[str] = 0
 		}
-		if len(bitMap) == 1 {
-			f.BitHeader[bitWidth-c-1].SetColor(color["same"])
-		} else {
-			f.BitHeader[bitWidth-c-1].SetColor(color["diff"])
-		}
+		f.UpdateHeader(bitMap, bitWidth-c-1)
 	}
 	binStr := strings.Join(bins, "")
 	bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
@@ -447,11 +425,25 @@ func (f *TMainForm) UpdateBit(row, resNum int64) {
 			}
 			bitMap[binString] = 0
 		}
-		if len(bitMap) == 1 {
-			f.BitHeader[c].SetColor(color["same"])
-		} else {
-			f.BitHeader[c].SetColor(color["diff"])
-		}
+		f.UpdateHeader(bitMap, c)
 		sum++
 	}
+}
+
+func (f *TMainForm) UpdateHeader(bitMap map[string]int, c int) {
+	if len(bitMap) == 1 {
+		f.BitHeader[c].SetColor(color["same"])
+	} else {
+		f.BitHeader[c].SetColor(color["diff"])
+	}
+}
+
+func (f *TMainForm) GetBitString(r int) []string {
+	bitList := make([]string, bitWidth)
+	for i := 0; i < bitWidth; i++ {
+		var bitString string
+		f.BitLocs[r][i].GetTextBuf(&bitString, 2)
+		bitList[i] = bitString
+	}
+	return bitList
 }
