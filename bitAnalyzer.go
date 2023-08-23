@@ -32,8 +32,8 @@ var (
 	// 	10: 10,
 	// 	8: 11,
 	// }
-	Row      = 1
-	winY     = int32(bitBgY*(Row+1)+pady*Row) + 50
+	Row  = 1
+	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
 )
 
 type TMainForm struct {
@@ -197,6 +197,9 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	addrow.SetBounds(padx, winY-25-bitBgY/2, ButtonS*2, bitBgY)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
+	if Row == 9 {
+		addrow.SetEnabled(false)
+	}
 	rmrow := vcl.NewButton(owner)
 	rmrow.SetParent(parent)
 	rmrow.SetBounds(padx+ButtonS*2, winY-25-bitBgY/2, ButtonS*2, bitBgY)
@@ -485,33 +488,28 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	}
 }
 
-func (f *TMainForm)AddR(sender vcl.IObject) {
-	if Row == 1{
+func (f *TMainForm) AddR(sender vcl.IObject) {
+	if Row == 1 {
 		f.RmRow.SetEnabled(true)
 	}
 	Row++
-	if Row == 9 {
-		f.AddRow.SetEnabled(false)
-	}
 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
 	f.Free()
-
 	vcl.Application.Initialize()
 	vcl.Application.SetMainFormOnTaskBar(true)
 	vcl.Application.CreateForm(&mainForm)
 	vcl.Application.Run()
 }
 
-func (f *TMainForm)RemoveR(sender vcl.IObject) {
+func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	if Row > 1 {
 		Row--
-		if Row == 1{
+		if Row == 1 {
 			f.RmRow.SetEnabled(false)
 		}
 	}
 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
 	f.Free()
-
 	vcl.Application.Initialize()
 	vcl.Application.SetMainFormOnTaskBar(true)
 	vcl.Application.CreateForm(&mainForm)
