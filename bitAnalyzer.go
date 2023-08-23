@@ -237,35 +237,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 		resNum, _ = strconv.ParseInt(bitString, f.base, bitWidth*2)
 	}
 	resNum &= 0xffffffff
-	binStr := strconv.FormatInt(resNum, 2)
-	n := len(binStr)
-	sum := 0
-	for c := bitWidth - 1; c >= 0; c-- {
-		bitMap := make(map[string]int, Row)
-		for r := 0; r < Row; r++ {
-			var binString string
-			f.BitLocs[r][c].GetTextBuf(&binString, 2)
-			if int64(r) == rowIx {
-				if sum < n {
-					s := string(binStr[n-sum-1])
-					f.BitLocs[r][c].SetTextBuf(s)
-					f.BitLocs[r][c].SetColor(color[s])
-					binString = s
-				} else {
-					f.BitLocs[r][c].SetTextBuf("0")
-					f.BitLocs[r][c].SetColor(color["0"])
-					binString = "0"
-				}
-			}
-			bitMap[binString] = 0
-		}
-		if len(bitMap) == 1 {
-			f.BitHeader[c].SetColor(color["same"])
-		} else {
-			f.BitHeader[c].SetColor(color["diff"])
-		}
-		sum++
-	}
+	f.UpdateBit(rowIx, resNum)
 }
 
 func (f *TMainForm) Clicked(sender vcl.IObject) {
@@ -380,35 +352,7 @@ func (f *TMainForm) ClickShift(sender vcl.IObject) {
 	}
 	num &= 0xffffffff
 	f.UpdateBitNum(num, rowIx)
-	binStr := strconv.FormatInt(num, 2)
-	n := len(binStr)
-	sum := 0
-	for c := bitWidth - 1; c >= 0; c-- {
-		bitMap := make(map[string]int, Row)
-		for r := 0; r < Row; r++ {
-			var binString string
-			f.BitLocs[r][c].GetTextBuf(&binString, 2)
-			if int64(r) == rowIx {
-				if sum < n {
-					s := string(binStr[n-sum-1])
-					f.BitLocs[r][c].SetTextBuf(s)
-					f.BitLocs[r][c].SetColor(color[s])
-					binString = s
-				} else {
-					f.BitLocs[r][c].SetTextBuf("0")
-					f.BitLocs[r][c].SetColor(color["0"])
-					binString = "0"
-				}
-			}
-			bitMap[binString] = 0
-		}
-		if len(bitMap) == 1 {
-			f.BitHeader[c].SetColor(color["same"])
-		} else {
-			f.BitHeader[c].SetColor(color["diff"])
-		}
-		sum++
-	}
+	f.UpdateBit(rowIx, num)
 }
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
@@ -483,5 +427,37 @@ func (f *TMainForm) UpdateBitNum(bin, r int64) {
 		f.BitNum[r].SetTextBuf(fmt.Sprint(bin))
 	case 8:
 		f.BitNum[r].SetTextBuf(fmt.Sprintf("%o", bin))
+	}
+}
+
+func (f *TMainForm) UpdateBit(row, resNum int64) {
+	binStr := strconv.FormatInt(resNum, 2)
+	n := len(binStr)
+	sum := 0
+	for c := bitWidth - 1; c >= 0; c-- {
+		bitMap := make(map[string]int, Row)
+		for r := 0; r < Row; r++ {
+			var binString string
+			f.BitLocs[r][c].GetTextBuf(&binString, 2)
+			if int64(r) == row {
+				if sum < n {
+					s := string(binStr[n-sum-1])
+					f.BitLocs[r][c].SetTextBuf(s)
+					f.BitLocs[r][c].SetColor(color[s])
+					binString = s
+				} else {
+					f.BitLocs[r][c].SetTextBuf("0")
+					f.BitLocs[r][c].SetColor(color["0"])
+					binString = "0"
+				}
+			}
+			bitMap[binString] = 0
+		}
+		if len(bitMap) == 1 {
+			f.BitHeader[c].SetColor(color["same"])
+		} else {
+			f.BitHeader[c].SetColor(color["diff"])
+		}
+		sum++
 	}
 }
