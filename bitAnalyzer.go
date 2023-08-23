@@ -279,23 +279,17 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 
 func (f *TMainForm) BaseChange(sender vcl.IObject) {
 	var str string
+	oldbase := f.base
 	ra := vcl.AsRadioButton(sender)
 	ra.GetTextBuf(&str, 4)
+	base, _ := strconv.ParseInt(str, 10, 16)
+	f.base = int(base)
 	for i := 0; i < Row; i++ {
 		var bitString string
 		f.BitNum[i].GetTextBuf(&bitString, bitWidth)
-		num, _ := strconv.ParseInt(bitString, f.base, bitWidth*2)
-		switch str {
-		case "16":
-			f.BitNum[i].SetTextBuf(fmt.Sprintf("%x", num))
-		case "10":
-			f.BitNum[i].SetTextBuf(fmt.Sprint(num))
-		case "8":
-			f.BitNum[i].SetTextBuf(fmt.Sprintf("%o", num))
-		}
+		num, _ := strconv.ParseInt(bitString, oldbase, bitWidth*2)
+		f.UpdateBitNum(num, int64(i))
 	}
-	base, _ := strconv.ParseInt(str, 10, 16)
-	f.base = int(base)
 }
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
@@ -418,7 +412,7 @@ func (f *TMainForm) GetRowIndex(sender vcl.IWinControl) int64 {
 	return rowIx
 }
 
-func (f *TMainForm) UpdateBitNum(bin, r int64) {
+func (f *TMainForm) UpdateBitNum(bin, r int64,) {
 	f.BitNum[r].Clear()
 	switch f.base {
 	case 16:
