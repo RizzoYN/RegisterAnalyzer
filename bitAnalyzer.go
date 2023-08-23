@@ -54,6 +54,8 @@ func main() {
 	vcl.Application.Initialize()
 	vcl.Application.SetMainFormOnTaskBar(true)
 	vcl.Application.CreateForm(&mainForm)
+	mainForm.EnabledMaximize(false)
+	mainForm.WorkAreaCenter()
 	vcl.Application.Run()
 }
 
@@ -365,10 +367,9 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 	Row++
 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
 	f.Free()
-	vcl.Application.Initialize()
-	vcl.Application.SetMainFormOnTaskBar(true)
-	vcl.Application.CreateForm(&mainForm)
-	vcl.Application.Run()
+	mainForm.Free()
+	vcl.Application.Terminate()
+	main()
 }
 
 func (f *TMainForm) RemoveR(sender vcl.IObject) {
@@ -377,10 +378,9 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	}
 	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
 	f.Free()
-	vcl.Application.Initialize()
-	vcl.Application.SetMainFormOnTaskBar(true)
-	vcl.Application.CreateForm(&mainForm)
-	vcl.Application.Run()
+	mainForm.Free()
+	vcl.Application.Terminate()
+	main()
 }
 
 func (f *TMainForm) GetRowIndex(sender vcl.IWinControl) int64 {
@@ -390,7 +390,7 @@ func (f *TMainForm) GetRowIndex(sender vcl.IWinControl) int64 {
 	return rowIx
 }
 
-func (f *TMainForm) UpdateBitNum(bin, r int64,) {
+func (f *TMainForm) UpdateBitNum(bin, r int64) {
 	f.BitNum[r].Clear()
 	switch f.base {
 	case 16:
