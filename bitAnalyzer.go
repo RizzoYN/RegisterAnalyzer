@@ -28,7 +28,7 @@ var (
 		"same": types.TColor(0xf0f0f0),
 	}
 	Row  = 1
-	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 )
 
 type TMainForm struct {
@@ -365,7 +365,7 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 		f.RmRow.SetEnabled(true)
 	}
 	Row++
-	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 	f.Free()
 	mainForm.Free()
 	vcl.Application.Terminate()
@@ -376,7 +376,7 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	if Row > 1 {
 		Row--
 	}
-	winY = int32(bitBgY*(Row+1)+pady*Row) + 50
+	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 	f.Free()
 	mainForm.Free()
 	vcl.Application.Terminate()
