@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 	"unsafe"
 
 	"github.com/ying32/govcl/vcl"
@@ -33,7 +33,7 @@ var (
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 )
 
-type bit interface{
+type bit interface {
 	GetTextBuf(Buffer *string, BufSize int32) int32
 	SetTextBuf(Buffer string)
 	SetColor(value types.TColor)
@@ -140,12 +140,12 @@ func newBitLoc(parent vcl.IWinControl, x, y, w, h int32, bitWidth, row int, colo
 
 type TMainForm struct {
 	*vcl.TForm
-	BitLocs        []BitLoc
-	BitHeader      []*vcl.TMemo
-	BaseChoise     *vcl.TRadioGroup
-	base           int
-	AddRow         *vcl.TButton
-	RmRow          *vcl.TButton
+	BitLocs    []BitLoc
+	BitHeader  []*vcl.TMemo
+	BaseChoise *vcl.TRadioGroup
+	base       int
+	AddRow     *vcl.TButton
+	RmRow      *vcl.TButton
 }
 
 var mainForm *TMainForm
@@ -173,15 +173,10 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	addrow.SetBounds(winX-padx-ButtonS*2, pady, ButtonS*2, bitBgY)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
-	if Row == 9 {
-		addrow.SetEnabled(false)
-	}
 	rmrow := vcl.NewButton(owner)
 	rmrow.SetParent(parent)
 	rmrow.SetBounds(winX-padx-ButtonS*2, pady+bitBgY, ButtonS*2, bitBgY)
-	if Row == 1 {
-		rmrow.SetEnabled(false)
-	}
+	rmrow.SetEnabled(false)
 	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
 	checkgroup := vcl.NewRadioGroup(owner)
@@ -363,26 +358,32 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 }
 
 func (f *TMainForm) AddR(sender vcl.IObject) {
-	if Row == 1 {
-		f.RmRow.SetEnabled(true)
-	}
 	Row++
+	f.RmRow.SetEnabled(true)
+	if Row == 3 {
+		f.AddRow.SetEnabled(false)
+	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
-	f.Free()
-	mainForm.Free()
-	vcl.Application.Terminate()
-	main()
+	f.SetHeight(winY)
+	bitRow := newBitLoc(f, padx, pady+50, bitBgX, bitBgY, bitWidth, Row, color["0"], f.Typed, f.Clicked, f.ClickShift, f.ClickReverse, f.ClickInvert, f.ClickClear)
+	f.BitLocs = append(f.BitLocs, bitRow)
+	f.UpdateHeaders()
 }
 
 func (f *TMainForm) RemoveR(sender vcl.IObject) {
-	if Row > 1 {
-		Row--
+	Row--
+	f.AddRow.SetEnabled(true)
+	if Row == 1 {
+		f.RmRow.SetEnabled(false)
+	}
+	bits := f.BitLocs[Row]
+	f.BitLocs = f.BitLocs[:Row]
+	for _, obj := range bits {
+		obj.Free()
 	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
-	f.Free()
-	mainForm.Free()
-	vcl.Application.Terminate()
-	main()
+	f.SetHeight(winY)
+	f.UpdateHeaders()
 }
 
 func (f *TMainForm) GetRowIndex(sender vcl.IWinControl) int64 {
@@ -444,6 +445,18 @@ func (f *TMainForm) UpdateHeader(bitMap map[string]int, c int) {
 		f.BitHeader[c].SetColor(color["same"])
 	} else {
 		f.BitHeader[c].SetColor(color["diff"])
+	}
+}
+
+func (f *TMainForm) UpdateHeaders() {
+	for c := 0; c < bitWidth; c++ {
+		bitMap := make(map[string]int, Row)
+		for r := 0; r < Row; r++ {
+			var str string
+			f.BitLocs[r][c].GetTextBuf(&str, 2)
+			bitMap[str] = 0
+		}
+		f.UpdateHeader(bitMap, c)
 	}
 }
 
