@@ -146,6 +146,7 @@ type TMainForm struct {
 	base       int
 	AddRow     *vcl.TButton
 	RmRow      *vcl.TButton
+	OnTop      *vcl.TCheckBox
 }
 
 var mainForm *TMainForm
@@ -163,23 +164,23 @@ func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 	f.SetCaption("寄存器工具")
 	f.SetClientHeight(winY)
 	f.SetClientWidth(winX)
-	f.initComponents(f, f, bitWidth, Row, color)
+	f.initComponents(f, bitWidth, Row, color)
 }
 
-func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl, cols, rows int, color map[string]types.TColor) {
+func (f *TMainForm) initComponents(parent vcl.IWinControl, cols, rows int, color map[string]types.TColor) {
 	f.base = 16
-	addrow := vcl.NewButton(owner)
+	addrow := vcl.NewButton(parent)
 	addrow.SetParent(parent)
 	addrow.SetBounds(winX-padx-ButtonS*2, pady, ButtonS*2, bitBgY)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
-	rmrow := vcl.NewButton(owner)
+	rmrow := vcl.NewButton(parent)
 	rmrow.SetParent(parent)
 	rmrow.SetBounds(winX-padx-ButtonS*2, pady+bitBgY, ButtonS*2, bitBgY)
 	rmrow.SetEnabled(false)
 	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
-	checkgroup := vcl.NewRadioGroup(owner)
+	checkgroup := vcl.NewRadioGroup(parent)
 	checkgroup.SetParent(parent)
 	checkgroup.SetCaption("进制")
 	checkgroup.SetBounds(winX-padx*2-120-ButtonS*2, pady, 120, 46)
@@ -197,6 +198,12 @@ func (f *TMainForm) initComponents(owner vcl.IComponent, parent vcl.IWinControl,
 	checkbutton8.SetParent(checkgroup)
 	checkbutton8.SetCaption("8")
 	checkbutton8.SetOnClick(f.BaseChange)
+	cb := vcl.NewCheckBox(parent)
+	cb.SetParent(parent)
+	cb.SetCaption("置顶")
+	cb.SetBounds(winX-padx*5-160-ButtonS*2, 20, 10, 10)
+	cb.SetOnClick(f.ClickOnTop)
+	f.OnTop = cb
 	headers := make([]*vcl.TMemo, cols)
 	bits := make([]BitLoc, rows)
 	for r := 0; r <= rows; r++ {
@@ -468,4 +475,13 @@ func (f *TMainForm) GetBitString(r int) []string {
 		bitList[i] = bitString
 	}
 	return bitList
+}
+
+func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
+	cb := vcl.AsCheckBox(sender)
+	if cb.Checked() {
+		f.SetFormStyle(types.FsSystemStayOnTop)
+	} else {
+		f.SetFormStyle(types.FsNormal)	
+	}
 }
