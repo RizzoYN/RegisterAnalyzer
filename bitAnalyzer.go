@@ -171,12 +171,12 @@ func (f *TMainForm) initComponents(parent vcl.IWinControl, cols, rows int, color
 	f.base = 16
 	addrow := vcl.NewButton(parent)
 	addrow.SetParent(parent)
-	addrow.SetBounds(winX-padx-ButtonS*2, pady, ButtonS*2, bitBgY)
+	addrow.SetBounds(winX-padx-ButtonS*2, pady+5, ButtonS*2, 20)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
 	rmrow := vcl.NewButton(parent)
 	rmrow.SetParent(parent)
-	rmrow.SetBounds(winX-padx-ButtonS*2, pady+bitBgY, ButtonS*2, bitBgY)
+	rmrow.SetBounds(winX-padx-ButtonS*2, pady+25, ButtonS*2, 20)
 	rmrow.SetEnabled(false)
 	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
@@ -372,6 +372,7 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 	f.SetHeight(winY)
+	f.Repaint()
 	bitRow := newBitLoc(f, padx, pady+50, bitBgX, bitBgY, bitWidth, Row, color["0"], f.Typed, f.Clicked, f.ClickShift, f.ClickReverse, f.ClickInvert, f.ClickClear)
 	f.BitLocs = append(f.BitLocs, bitRow)
 	f.UpdateHeaders()
