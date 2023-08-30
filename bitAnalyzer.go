@@ -30,6 +30,7 @@ var (
 		"same": types.TColor(0xf0f0f0),
 	}
 	Row  = 1
+	MaxRow = 3
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 )
 
@@ -77,7 +78,6 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 		memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
 	}
 	memo.SetMaxLength(maxLength)
-	memo.SetHideSelection(true)
 	return memo
 }
 
@@ -86,7 +86,7 @@ func newBitLoc(parent vcl.IWinControl, x, y, w, h int32, bitWidth, row int, colo
 	for c := 0; c < bitWidth; c++ {
 		bit[c] = newMemo(parent, x, y, w, h, c, row, bitWidth, color, "0", fn[0])
 	}
-	numEdit := vcl.NewEdit(parent)
+	numEdit := vcl.NewMemo(parent)
 	numEdit.SetParent(parent)
 	numEdit.SetBounds(int32(padx+bitWidth*bitBgX), padx+int32(row)*bitBgY+50, bitNumEdX, bitBgY)
 	numEdit.SetOnKeyUp(fnc)
@@ -224,7 +224,7 @@ func (f *TMainForm) initComponents(parent vcl.IWinControl, cols, rows int, color
 
 func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
 	var str string
-	num := vcl.AsEdit(sender)
+	num := vcl.AsMemo(sender)
 	num.GetTextBuf(&str, bitWidth)
 	rowIx := f.GetRowIndex(num)
 	resNum, err := strconv.ParseInt(str, f.base, bitWidth*2)
@@ -233,6 +233,7 @@ func (f *TMainForm) Typed(sender vcl.IObject, key *types.Char, shift types.TShif
 		binStr := strings.Join(bitList, "")
 		bin, _ := strconv.ParseInt(binStr, 2, bitWidth*2)
 		f.UpdateBitNum(bin, rowIx)
+		num.SetSelStart(int32(len(str)))
 		var bitString string
 		f.BitLocs[rowIx][bitWidth].GetTextBuf(&bitString, bitWidth*2)
 		resNum, _ = strconv.ParseInt(bitString, f.base, bitWidth*2)
@@ -367,7 +368,7 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 func (f *TMainForm) AddR(sender vcl.IObject) {
 	Row++
 	f.RmRow.SetEnabled(true)
-	if Row == 3 {
+	if Row == MaxRow {
 		f.AddRow.SetEnabled(false)
 	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
