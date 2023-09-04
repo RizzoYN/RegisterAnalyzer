@@ -61,6 +61,7 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 	memo.SetParent(parent)
 	memo.SetPopupMenu(menu)
 	memo.SetTextBuf(text)
+	memo.SetBounds(x+int32(ix%bitWidth)*w, y+int32(row)*h, w, h)
 	var maxLength int32
 	if row < 1 {
 		maxLength = 3
@@ -87,11 +88,6 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 	go func() {
 		vcl.ThreadSync(func(){
 			memo.SetReadOnly(true)
-		})
-  	}()
-	go func() {
-		vcl.ThreadSync(func(){
-			memo.SetBounds(x+int32(ix%bitWidth)*w, y+int32(row)*h, w, h)
 		})
   	}()
 	return memo
