@@ -58,7 +58,22 @@ type BitLoc []bit
 func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, color types.TColor, text string, fn ...vcl.TNotifyEvent) *vcl.TMemo {
 	memo := vcl.NewMemo(parent)
 	menu := vcl.NewPopupMenu(parent)
+	memo.SetParent(parent)
+	memo.SetPopupMenu(menu)
 	memo.SetTextBuf(text)
+	var maxLength int32
+	if row < 1 {
+		maxLength = 3
+		memo.SetBorderStyle(types.BsNone)
+		memo.SetHeight(17)
+		memo.SetControlState(types.CsNoStdEvents)
+		memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
+	} else {
+		maxLength = 1
+		memo.SetOnClick(fn[0])
+		memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
+	}
+	memo.SetMaxLength(maxLength)
 	go func() {
 		vcl.ThreadSync(func(){
 			memo.SetColor(color)
@@ -79,25 +94,6 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 			memo.SetBounds(x+int32(ix%bitWidth)*w, y+int32(row)*h, w, h)
 		})
   	}()
-	go func() {
-		vcl.ThreadSync(func(){
-			var maxLength int32
-			if row < 1 {
-				maxLength = 3
-				memo.SetBorderStyle(types.BsNone)
-				memo.SetHeight(17)
-				memo.SetControlState(types.CsNoStdEvents)
-				memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
-			} else {
-				maxLength = 1
-				memo.SetOnClick(fn[0])
-				memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
-			}
-			memo.SetMaxLength(maxLength)
-		})
-  	}()
-	memo.SetParent(parent)
-	memo.SetPopupMenu(menu)
 	return memo
 }
 
