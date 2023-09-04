@@ -58,33 +58,53 @@ type BitLoc []bit
 func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, color types.TColor, text string, fn ...vcl.TNotifyEvent) *vcl.TMemo {
 	memo := vcl.NewMemo(parent)
 	menu := vcl.NewPopupMenu(parent)
+	memo.SetTextBuf(text)
+	go func() {
+		vcl.ThreadSync(func(){
+			memo.SetColor(color)
+		})
+  	}()
+	go func() {
+		vcl.ThreadSync(func(){
+			memo.SetAlignment(types.TaCenter)
+		})
+  	}()
+	go func() {
+		vcl.ThreadSync(func(){
+			memo.SetReadOnly(true)
+		})
+  	}()
+	go func() {
+		vcl.ThreadSync(func(){
+			memo.SetBounds(x+int32(ix%bitWidth)*w, y+int32(row)*h, w, h)
+		})
+  	}()
+	go func() {
+		vcl.ThreadSync(func(){
+			var maxLength int32
+			if row < 1 {
+				maxLength = 3
+				memo.SetBorderStyle(types.BsNone)
+				memo.SetHeight(17)
+				memo.SetControlState(types.CsNoStdEvents)
+				memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
+			} else {
+				maxLength = 1
+				memo.SetOnClick(fn[0])
+				memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
+			}
+			memo.SetMaxLength(maxLength)
+		})
+  	}()
 	memo.SetParent(parent)
 	memo.SetPopupMenu(menu)
-	memo.SetTextBuf(text)
-	memo.SetColor(color)
-	memo.SetAlignment(types.TaCenter)
-	memo.SetReadOnly(true)
-	memo.SetBounds(x+int32(ix%bitWidth)*w, y+int32(row)*h, w, h)
-	var maxLength int32
-	if row < 1 {
-		maxLength = 3
-		memo.SetBorderStyle(types.BsNone)
-		memo.SetHeight(17)
-		memo.SetControlState(types.CsNoStdEvents)
-		memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
-	} else {
-		maxLength = 1
-		memo.SetOnClick(fn[0])
-		memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
-	}
-	memo.SetMaxLength(maxLength)
 	return memo
 }
 
 func newBitLoc(parent vcl.IWinControl, x, y, w, h int32, bitWidth, row int, color types.TColor, fnc vcl.TKeyEvent, fn ...vcl.TNotifyEvent) BitLoc {
 	bit := make(BitLoc, bitWidth+7)
 	for c := 0; c < bitWidth; c++ {
-		bit[c] = newMemo(parent, x, y, w, h, c, row, bitWidth, color, "0", fn[0])
+		bit[c] = newMemo(parent, x, y, w, h, c, row, bitWidth, color, "0", fn[0])	
 	}
 	numEdit := vcl.NewMemo(parent)
 	numEdit.SetParent(parent)
