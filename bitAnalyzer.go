@@ -399,12 +399,12 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	}
 	bits := f.BitLocs[Row]
 	f.BitLocs = f.BitLocs[:Row]
-	for _, obj := range bits {
-		obj.Free()
-	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 	f.SetHeight(winY)
 	f.UpdateHeaders()
+	for _, obj := range bits {
+		obj.Free()
+	}
 }
 
 func (f *TMainForm) GetRowIndex(sender vcl.IWinControl) int64 {
