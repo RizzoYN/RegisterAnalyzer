@@ -75,21 +75,9 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 		memo.SetName(fmt.Sprintf("m%dbit%d", ix, row-1))
 	}
 	memo.SetMaxLength(maxLength)
-	go func() {
-		vcl.ThreadSync(func(){
-			memo.SetColor(color)
-		})
-  	}()
-	go func() {
-		vcl.ThreadSync(func(){
-			memo.SetAlignment(types.TaCenter)
-		})
-  	}()
-	go func() {
-		vcl.ThreadSync(func(){
-			memo.SetReadOnly(true)
-		})
-  	}()
+	memo.SetColor(color)
+	memo.SetAlignment(types.TaCenter)
+	memo.SetReadOnly(true)
 	return memo
 }
 
