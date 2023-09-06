@@ -69,6 +69,7 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 		maxLength = 3
 		memo.SetBorderStyle(types.BsNone)
 		memo.SetHeight(17)
+		memo.SetTop(y+7)
 		memo.SetControlState(types.CsNoStdEvents)
 		memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
 	} else {
