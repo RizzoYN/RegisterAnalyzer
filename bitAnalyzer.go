@@ -316,7 +316,7 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	f.BitLocs[rowIx][bitWidth].SetTextBuf("0")
 	for c := 0; c < bitWidth; c++ {
 		bitMap := make(map[string]int, Row)
-		for i := 0; i < Row; i++ {
+		for i := 0; i < MaxRow; i++ {
 			var bitString string
 			if int64(i) == rowIx {
 				f.BitLocs[rowIx][c].SetTextBuf("0")
@@ -414,6 +414,7 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	bits := f.BitLocs[Row]
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
 	f.SetHeight(winY)
+	f.ClickClear(bits[bitWidth+6])
 	f.UpdateHeaders()
 	for _, obj := range bits {
 		obj.Hide()
