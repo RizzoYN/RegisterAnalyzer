@@ -29,9 +29,9 @@ var (
 		"diff": types.TColor(0xffaaff),
 		"same": types.TColor(0xf0f0f0),
 	}
-	Row  = 1
+	Row    = 1
 	MaxRow = 3
-	winY = int32(bitBgY*(Row+1)+pady*2) + 50
+	winY   = int32(bitBgY*(Row+1)+pady*2) + 50
 )
 
 type bit interface {
@@ -69,7 +69,7 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 		maxLength = 3
 		memo.SetBorderStyle(types.BsNone)
 		memo.SetHeight(17)
-		memo.SetTop(y+7)
+		memo.SetTop(y + 7)
 		memo.SetControlState(types.CsNoStdEvents)
 		memo.SetName(fmt.Sprintf("m%dhead%d", ix, 0))
 	} else {
@@ -89,10 +89,10 @@ func newMemo(parent vcl.IWinControl, x, y, w, h int32, ix, row, bitWidth int, co
 	return memo
 }
 
-func newBitLoc(parent vcl.IWinControl, x, y, w, h int32, bitWidth, row int, color types.TColor, show bool,fnc vcl.TKeyEvent, fn ...vcl.TNotifyEvent) BitLoc {
+func newBitLoc(parent vcl.IWinControl, x, y, w, h int32, bitWidth, row int, color types.TColor, show bool, fnc vcl.TKeyEvent, fn ...vcl.TNotifyEvent) BitLoc {
 	bit := make(BitLoc, bitWidth+7)
 	for c := 0; c < bitWidth; c++ {
-		bit[c] = newMemo(parent, x, y, w, h, c, row, bitWidth, color, "0", show, fn[0])	
+		bit[c] = newMemo(parent, x, y, w, h, c, row, bitWidth, color, "0", show, fn[0])
 	}
 	numEdit := vcl.NewMemo(parent)
 	numEdit.SetParent(parent)
@@ -398,11 +398,16 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 		f.AddRow.SetEnabled(false)
 	}
 	winY = int32(bitBgY*(Row+1)+pady*2) + 50
+	for _, obj := range f.BitLocs[Row-1] {
+		tmp := obj
+		go func(j bit) {
+			vcl.ThreadSync(func() {
+				j.Show()
+			})
+		}(tmp)
+	}
 	f.SetHeight(winY)
 	f.Repaint()
-	for _, obj := range(f.BitLocs[Row-1]) {
-		obj.Show()
-	}
 	f.UpdateHeaders()
 }
 
@@ -511,6 +516,6 @@ func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
 	if cb.Checked() {
 		f.SetFormStyle(types.FsSystemStayOnTop)
 	} else {
-		f.SetFormStyle(types.FsNormal)	
+		f.SetFormStyle(types.FsNormal)
 	}
 }
