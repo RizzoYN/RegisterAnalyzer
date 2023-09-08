@@ -65,7 +65,7 @@ class BitHeader(FormText):
         self.configure(bg='#ffaaff' if len(bit_set) > 1 else '#ffffff')
 
 
-class NumRes(FormText): 
+class NumRes(FormText):
     def change_num(self, bits, base=16):
         bin_str = ''.join([bit.get('1.0') for bit in bits])
         dec_num = int(bin_str, 2)
@@ -100,12 +100,14 @@ class NumShift:
         self.shift_num.grid(row=row, column=data_width + 4)
         self.r_shift.grid(row=row, column=data_width + 5)
         self.base = base
+        self.data_width = data_width
 
     def shift(self, mode, num_text, bits, function):
         shift_num = int(self.shift_num.get('1.0', 'end'))
         num = int(num_text.get('1.0', 'end'), self.base)
         num_text.delete('1.0', 'end')
         res = num << shift_num if mode == 'l' else num >> shift_num
+        res &= 2**self.data_width-1
         num_text.insert('1.0', f'{base_func[self.base](res)}', 'center')
         num_text.change_bit_loc(bits, function, base=self.base)
 
