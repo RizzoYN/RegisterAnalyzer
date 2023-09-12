@@ -7,8 +7,6 @@ import (
 )
 
 var (
-	WIDTH    = 33 * 20
-	HEIGHT   = 42
 	colorMap = map[string]fltk.Color{
 		"0":    fltk.WHITE,
 		"1":    fltk.BACKGROUND_COLOR,
@@ -17,11 +15,13 @@ var (
 		"0": "1",
 		"1": "0",
 	}
-	padX, padY = 2, 2
-	bitHeight, bitWidth = 18, 18
+	pad = 2
+	bitW = 18
+	bitH = 22
 	dataWidth = 32
-	maxRow = 3
-	Row = 1
+	maxRow = 2
+	WIDTH    = dataWidth*(bitW+pad)+pad*8+bitW*13+50
+	HEIGHT   = bitW + maxRow*bitH + pad*4
 )
 
 type Bit struct {
@@ -57,6 +57,25 @@ func NewBit(x, y, w, h int) *Bit {
 	return b
 }
 
+type Bits struct {
+	Bits []*Bit
+}
+
+func NewBits(row int) *Bits {
+	bits := make([]*Bit, dataWidth)
+	var h int
+	if row == 1 {
+		h = row*(pad+bitW)
+	} else {
+		h = row*bitH
+	}
+	for c := 0; c < dataWidth; c++ {
+		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH)
+		bits[c] = bit
+	}
+	return &Bits{Bits: bits}
+}
+
 type Header struct {
 	Header *fltk.TextDisplay
 }
@@ -81,18 +100,93 @@ func NewHeader(x, y, w, h int, ix string) *Header {
 	return header
 }
 
+type Headers struct {
+	Headers []*Header
+}
+
+func NewHeaders() *Headers {
+	headers := make([]*Header, dataWidth)
+	for c := 0; c < dataWidth; c++ {
+		head := NewHeader(c*(bitW+pad)+pad, pad, bitW, bitW, fmt.Sprint(dataWidth-1-c))
+		headers[c]= head
+	}
+	return &Headers{Headers: headers}
+}
+
+type BitRow struct {
+	Loc *Bits
+	Num *fltk.TextEditor
+	LShift *fltk.TextDisplay
+	ShiftNum *fltk.TextEditor
+	RShift *fltk.TextDisplay
+	Reverse *fltk.TextDisplay
+	Invert *fltk.TextDisplay
+	Clear *fltk.TextDisplay
+}
+
+func NewBitRow(row int) *BitRow {
+	bitRow := new(BitRow)
+	bitRow.Loc = NewBits(row)
+	var h int
+	if row == 1 {
+		h = row*(pad+bitW)
+	} else {
+		h = row*bitH
+	}
+	num := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad, h, bitW*6, bitH)
+	numBuf := fltk.NewTextBuffer()
+	num.SetBox(fltk.BORDER_BOX)
+	num.SetBuffer(numBuf)
+	bitRow.Num = num
+	lShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH)
+	lShift.SetBox(fltk.BORDER_BOX)
+	lBuf := fltk.NewTextBuffer()
+	lBuf.SetText("<<")
+	lShift.SetBuffer(lBuf)
+	bitRow.LShift = lShift
+	shiftNum := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
+	shiftBuf := fltk.NewTextBuffer()
+	shiftBuf.SetText("1")
+	shiftNum.SetBox(fltk.BORDER_BOX)
+	shiftNum.SetBuffer(shiftBuf)
+	bitRow.ShiftNum = shiftNum
+	rShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH)
+	rShift.SetBox(fltk.BORDER_BOX)
+	rBuf := fltk.NewTextBuffer()
+	rBuf.SetText(">>")
+	rShift.SetBuffer(rBuf)
+	bitRow.RShift = rShift
+	reverse := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH)
+	reverse.SetBox(fltk.BORDER_BOX)
+	reverseBuf := fltk.NewTextBuffer()
+	reverseBuf.SetText("倒序")
+	reverse.SetBuffer(reverseBuf)
+	bitRow.Reverse = reverse
+	invert := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH)
+	invert.SetBox(fltk.BORDER_BOX)
+	invertBuf := fltk.NewTextBuffer()
+	invertBuf.SetText("转换")
+	invert.SetBuffer(invertBuf)
+	bitRow.Invert = lShift
+	clear := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH)
+	clear.SetBox(fltk.BORDER_BOX)
+	clearBuf := fltk.NewTextBuffer()
+	clearBuf.SetText("清空")
+	clear.SetBuffer(clearBuf)
+	bitRow.Clear = clear
+	return bitRow
+}
+
 func main() {
 	fltk.InitStyles()
 	win := fltk.NewWindow(WIDTH, HEIGHT)
 	win.SetLabel("寄存器工具")
 	win.SetColor(fltk.WHITE)
-	for r := 0; r < 2; r++ {
-		for i := 0; i < 32; i++ {
-			if r == 0 {
-				NewHeader(i*20+2, 2, 18, 18, fmt.Sprint(31-i))
-			} else {
-				NewBit(i*20+2, 20, 18, 18)
-			}
+	for r := 0; r < maxRow+1; r++ {
+		if r == 0 {
+			NewHeaders()
+		} else {
+			NewBitRow(r)
 		}
 	}
 	win.End()
