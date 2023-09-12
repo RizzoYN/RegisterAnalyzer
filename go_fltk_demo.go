@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/pwiecz/go-fltk"
 )
@@ -24,17 +26,28 @@ var (
 	HEIGHT   = bitW + maxRow*bitH + pad*4
 )
 
+type obj interface{
+	Label() string 
+}
+
+type ClickHandler func(fltk.Event) bool
+
 type Bit struct {
 	Bit *fltk.TextDisplay
 }
 
-func (b *Bit) Click(e fltk.Event) bool {
-	val := b.Bit.Buffer().Text()
-	if e == fltk.Event(fltk.LeftMouse) {
-		b.Bit.Buffer().SetText(textMap[val])
-		return true
+func (b *Bit) Click(fns []func(...interface{})) ClickHandler {
+	return func(e fltk.Event) bool {
+		val := b.Bit.Buffer().Text()
+		if e == fltk.Event(fltk.LeftMouse) {
+			b.Bit.Buffer().SetText(textMap[val])
+			for _, fn := range(fns) {
+				fn()
+			}
+			return true
+		}
+		return false
 	}
-	return false
 }
 
 func (b *Bit) DrawHandler(f func()) {
@@ -45,15 +58,17 @@ func (b *Bit) DrawHandler(f func()) {
 	fltk.Draw(textMap[textMap[val]], b.Bit.X(), b.Bit.Y(), b.Bit.W(), b.Bit.H(), fltk.ALIGN_CENTER)
 }
 
-func NewBit(x, y, w, h int) *Bit {
+func NewBit(x, y, w, h int, ix string, fns ...func(...interface{})) *Bit {
 	b := new(Bit)
 	bit := fltk.NewTextDisplay(x, y, w, h)
 	buf := fltk.NewTextBuffer()
 	buf.SetText("0")
 	bit.SetBuffer(buf)
 	bit.SetDrawHandler(b.DrawHandler)
+	bit.SetLabel(ix)
+	bit.SetLabelType(fltk.NO_LABEL)
 	b.Bit = bit
-	b.Bit.SetEventHandler(b.Click)
+	b.Bit.SetEventHandler(b.Click(fns))
 	return b
 }
 
@@ -70,7 +85,7 @@ func NewBits(row int) *Bits {
 		h = row*bitH
 	}
 	for c := 0; c < dataWidth; c++ {
-		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH)
+		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH, fmt.Sprintf("%d %d", row-1, c))
 		bits[c] = bit
 	}
 	return &Bits{Bits: bits}
@@ -137,45 +152,78 @@ func NewBitRow(row int) *BitRow {
 	numBuf := fltk.NewTextBuffer()
 	num.SetBox(fltk.BORDER_BOX)
 	num.SetBuffer(numBuf)
+	num.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth))
+	num.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.Num = num
 	lShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH)
 	lShift.SetBox(fltk.BORDER_BOX)
 	lBuf := fltk.NewTextBuffer()
 	lBuf.SetText("<<")
 	lShift.SetBuffer(lBuf)
+	lShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+1))
+	lShift.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.LShift = lShift
 	shiftNum := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
 	shiftBuf := fltk.NewTextBuffer()
 	shiftBuf.SetText("1")
 	shiftNum.SetBox(fltk.BORDER_BOX)
 	shiftNum.SetBuffer(shiftBuf)
+	shiftNum.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+2))
+	shiftNum.SetLabelType(fltk.NO_LABEL)
 	bitRow.ShiftNum = shiftNum
 	rShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH)
 	rShift.SetBox(fltk.BORDER_BOX)
 	rBuf := fltk.NewTextBuffer()
 	rBuf.SetText(">>")
 	rShift.SetBuffer(rBuf)
+	rShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+3))
+	rShift.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.RShift = rShift
 	reverse := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH)
 	reverse.SetBox(fltk.BORDER_BOX)
 	reverseBuf := fltk.NewTextBuffer()
 	reverseBuf.SetText("倒序")
 	reverse.SetBuffer(reverseBuf)
+	reverse.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+4))
+	reverse.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.Reverse = reverse
 	invert := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH)
 	invert.SetBox(fltk.BORDER_BOX)
 	invertBuf := fltk.NewTextBuffer()
 	invertBuf.SetText("转换")
 	invert.SetBuffer(invertBuf)
+	invert.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+5))
+	invert.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.Invert = lShift
 	clear := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH)
 	clear.SetBox(fltk.BORDER_BOX)
 	clearBuf := fltk.NewTextBuffer()
 	clearBuf.SetText("清空")
 	clear.SetBuffer(clearBuf)
+	clear.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+6))
+	clear.SetLabelType(fltk.NO_LABEL)
+
 	bitRow.Clear = clear
 	return bitRow
 }
+
+func ParseLoc(o obj) (int, int) {
+	label := strings.Split(o.Label(), " ")
+	r, _ := strconv.ParseInt(label[0], 10, 16)
+	c, _ := strconv.ParseInt(label[1], 10, 16)
+	return int(r), int(c)
+}
+
+// func (h *Headers) UpdataHeader(c int) {
+// 	obj := h.Headers[c]
+// 	obj.Header.SetDrawHandler(obj.DrawHandler(fltk.BLACK))
+// }
+
 
 func main() {
 	fltk.InitStyles()
