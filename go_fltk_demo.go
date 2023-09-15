@@ -75,7 +75,7 @@ func NewHeader(x, y, w, h, ix int) *Header {
 	header.SetAlign(fltk.ALIGN_CENTER)
 	header.SetColor(fltk.WHITE)
 	header.SetLabelColor(headerColorMap["same"])
-	header.SetLabelSize(14)
+	header.SetLabelSize(12)
 	return &Header{header}
 }
 
@@ -83,9 +83,9 @@ type Headers []*Header
 
 func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 	if len(bitMap) == 1 {
-		h[c].SetColor(headerColorMap["same"])
+		h[c].SetLabelColor(headerColorMap["same"])
 	} else {
-		h[c].SetColor(headerColorMap["diff"])
+		h[c].SetLabelColor(headerColorMap["diff"])
 	}
 }
 
