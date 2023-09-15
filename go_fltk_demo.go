@@ -268,6 +268,7 @@ func NewBitRow(row int, fn func()) *BitRow {
 	num.SetBox(fltk.BORDER_BOX)
 	num.SetBuffer(numBuf)
 	num.SetInsertPosition(1)
+	num.SetWrapMode(fltk.WRAP_NONE)
 	num.SetEventHandler(bitRow.KeyType(fn))
 	bitRow.Num = num
 	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
@@ -284,6 +285,7 @@ func NewBitRow(row int, fn func()) *BitRow {
 	shiftNum.SetBox(fltk.BORDER_BOX)
 	shiftNum.SetBuffer(shiftBuf)
 	shiftNum.SetInsertPosition(1)
+	shiftNum.SetWrapMode(fltk.WRAP_NONE)
 	bitRow.ShiftNum = shiftNum
 	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
 	rShift.SetBox(fltk.BORDER_BOX)
@@ -405,7 +407,7 @@ func (m *MainForm) BaseChoise(base int) func() {
 // func (m *MainForm) SetOntop(w *fltk.Window) func() {
 // 	return func() {
 // 		if m.OnTop.Value() {
-			
+
 // 		} else {
 
 // 		}
