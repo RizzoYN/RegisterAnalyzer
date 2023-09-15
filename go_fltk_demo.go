@@ -336,6 +336,7 @@ func NewMainForm() {
 			bitRows[r-1] = NewBitRow(r, mainForm.Updateheaders)
 		}
 	}
+	mainForm.BitRows = bitRows
 }
 
 func main() {
