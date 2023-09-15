@@ -26,18 +26,18 @@ var (
 	bitW      = 18
 	bitH      = 22
 	dataWidth = 32
-	maxRow    = 2
-	Row       = 2
+	maxRow    = 3
+	Row       = 1
 	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
-	HEIGHT    = bitW + maxRow*bitH + pad*4
+	HEIGHT    = bitW + Row*bitH + pad*(3+Row) + 30
 	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
 )
 
 func ParseHeight(row int) int {
 	if row == 1 {
-		return row * (pad + bitW)
+		return pad*2 + 28 + bitW
 	} else {
-		return row * bitH
+		return (row-1)*bitH + pad*(row+1) + 28 + bitW
 	}
 }
 
@@ -97,7 +97,7 @@ func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 func NewHeaders() Headers {
 	headers := make([]*Header, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		head := NewHeader(c*(bitW+pad)+pad, pad, bitW, bitW, dataWidth-1-c)
+		head := NewHeader(c*(bitW+pad)+pad, pad*2+28, bitW, bitW, dataWidth-1-c)
 		headers[c] = head
 	}
 	return headers
@@ -123,14 +123,14 @@ func (b *BitRow) GetBitString() []string {
 	return bitList
 }
 
-func (b *BitRow) SetNum(bin int64) {
+func (b *BitRow) SetNum(num int64) {
 	switch b.base {
 	case 16:
-		b.Num.Buffer().SetText(fmt.Sprintf("%x", bin))
+		b.Num.Buffer().SetText(fmt.Sprintf("%x", num))
 	case 10:
-		b.Num.Buffer().SetText(fmt.Sprint(bin))
+		b.Num.Buffer().SetText(fmt.Sprint(num))
 	case 8:
-		b.Num.Buffer().SetText(fmt.Sprintf("%o", bin))
+		b.Num.Buffer().SetText(fmt.Sprintf("%o", num))
 	}
 }
 
@@ -148,7 +148,9 @@ func (b *BitRow) ClickClear(fn func()) func() {
 			b.BitLocs[c].SetColor(bitColorMap["0"])
 		}
 		b.Num.Buffer().SetText("0")
-		fn()
+		if fn != nil {
+			fn()
+		}
 	}
 }
 
@@ -163,6 +165,10 @@ func (b *BitRow) ClickInvert(fn func()) func() {
 }
 
 func (b *BitRow) GetCurrentNum() (int64, int) {
+	str := b.Num.Buffer().Text()
+	if str == "" {
+		str = "0"
+	}
 	num, _ := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
 	shiftNum, _ := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
 	return num, int(shiftNum)
@@ -302,7 +308,7 @@ func NewBitRow(row int, fn func()) *BitRow {
 	invert.ClearVisibleFocus()
 	invert.SetDownBox(fltk.FLAT_BOX)
 	invert.SetCallback(bitRow.ClickInvert(fn))
-	bitRow.Invert = lShift
+	bitRow.Invert = invert
 	clear := fltk.NewButton(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH, "清空")
 	clear.SetBox(fltk.BORDER_BOX)
 	clear.SetLabelSize(12)
@@ -318,6 +324,12 @@ func NewBitRow(row int, fn func()) *BitRow {
 type MainForm struct {
 	Headers Headers
 	BitRows []*BitRow
+	AddRow  *fltk.Button
+	RmRow   *fltk.Button
+	Base16  *fltk.RadioRoundButton
+	Base10  *fltk.RadioRoundButton
+	Base8   *fltk.RadioRoundButton
+	// OnTop   *fltk.CheckButton
 }
 
 func (m *MainForm) Updateheaders() {
@@ -331,17 +343,137 @@ func (m *MainForm) Updateheaders() {
 	}
 }
 
-func NewMainForm() {
+func (m *MainForm) Add(w *fltk.Window) func() {
+	return func() {
+		Row++
+		m.RmRow.Activate()
+		if Row == maxRow {
+			m.AddRow.Deactivate()
+		}
+		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		bitRow := m.BitRows[Row-1]
+		for _, obj := range bitRow.BitLocs {
+			obj.Show()
+		}
+		bitRow.Num.Show()
+		bitRow.LShift.Show()
+		bitRow.ShiftNum.Show()
+		bitRow.RShift.Show()
+		bitRow.Reverse.Show()
+		bitRow.Invert.Show()
+		bitRow.Clear.Show()
+		m.Updateheaders()
+	}
+}
+
+func (m *MainForm) Remove(w *fltk.Window) func() {
+	return func() {
+		Row--
+		m.AddRow.Activate()
+		if Row == 1 {
+			m.RmRow.Deactivate()
+		}
+		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		bitRow := m.BitRows[Row]
+		bitRow.ClickClear(nil)()
+		for _, obj := range bitRow.BitLocs {
+			obj.Hide()
+		}
+		bitRow.Num.Hide()
+		bitRow.LShift.Hide()
+		bitRow.ShiftNum.Hide()
+		bitRow.RShift.Hide()
+		bitRow.Reverse.Hide()
+		bitRow.Invert.Hide()
+		bitRow.Clear.Hide()
+		m.Updateheaders()
+	}
+}
+
+func (m *MainForm) BaseChoise(base int) func() {
+	return func() {
+		for r := 0; r < maxRow; r++ {
+			num, _ := m.BitRows[r].GetCurrentNum()
+			m.BitRows[r].base = base
+			m.BitRows[r].SetNum(num)
+		}
+	}
+}
+
+// func (m *MainForm) SetOntop(w *fltk.Window) func() {
+// 	return func() {
+// 		if m.OnTop.Value() {
+			
+// 		} else {
+
+// 		}
+// 	}
+// }
+
+func NewMainForm(w *fltk.Window) {
 	mainForm := new(MainForm)
 	bitRows := make([]*BitRow, maxRow)
-	for r := 0; r < maxRow+1; r++ {
+	for r := 0; r <= maxRow; r++ {
 		if r == 0 {
 			mainForm.Headers = NewHeaders()
 		} else {
-			bitRows[r-1] = NewBitRow(r, mainForm.Updateheaders)
+			bitRow := NewBitRow(r, mainForm.Updateheaders)
+			if r > Row {
+				for _, obj := range bitRow.BitLocs {
+					obj.Hide()
+				}
+				bitRow.Num.Hide()
+				bitRow.LShift.Hide()
+				bitRow.ShiftNum.Hide()
+				bitRow.RShift.Hide()
+				bitRow.Reverse.Hide()
+				bitRow.Invert.Hide()
+				bitRow.Clear.Hide()
+			}
+			bitRows[r-1] = bitRow
 		}
 	}
 	mainForm.BitRows = bitRows
+	box := fltk.NewBox(fltk.BORDER_BOX, pad*5+30, pad*4, 118, 20, "进制")
+	box.SetColor(fltk.WHITE)
+	box.SetAlign(fltk.ALIGN_LEFT)
+	base16 := fltk.NewRadioRoundButton(pad*8+30, pad*5, 16, 16, "16")
+	base16.ClearVisibleFocus()
+	base16.SetValue(true)
+	base16.SetCallback(mainForm.BaseChoise(16))
+	mainForm.Base16 = base16
+	base10 := fltk.NewRadioRoundButton(pad*8+70, pad*5, 16, 16, "10")
+	base10.ClearVisibleFocus()
+	base10.SetCallback(mainForm.BaseChoise(10))
+	mainForm.Base10 = base10
+	base8 := fltk.NewRadioRoundButton(pad*8+110, pad*5, 16, 16, "8")
+	base8.ClearVisibleFocus()
+	base8.SetCallback(mainForm.BaseChoise(8))
+	mainForm.Base8 = base8
+	addR := fltk.NewButton(pad*5+150, pad*4, 60, 20, "增加一行")
+	addR.SetBox(fltk.BORDER_BOX)
+	addR.SetLabelSize(12)
+	addR.SetLabelFont(fltk.HELVETICA)
+	addR.ClearVisibleFocus()
+	addR.SetDownBox(fltk.FLAT_BOX)
+	addR.SetCallback(mainForm.Add(w))
+	rmR := fltk.NewButton(pad*6+210, pad*4, 60, 20, "删除一行")
+	rmR.SetBox(fltk.BORDER_BOX)
+	rmR.SetLabelSize(12)
+	rmR.SetLabelFont(fltk.HELVETICA)
+	rmR.ClearVisibleFocus()
+	rmR.SetDownBox(fltk.FLAT_BOX)
+	rmR.Deactivate()
+	rmR.SetCallback(mainForm.Remove(w))
+	mainForm.AddRow = addR
+	mainForm.RmRow = rmR
+	// onTop := fltk.NewCheckButton(WIDTH-pad-20, pad*4, 1206, 20, "置顶")
+	// onTop.ClearVisibleFocus()
+	// onTop.SetAlign(fltk.ALIGN_LEFT)
+	// onTop.SetCallback(mainForm.SetOntop(w))
+	// mainForm.OnTop = onTop
 }
 
 func main() {
@@ -349,7 +481,7 @@ func main() {
 	win := fltk.NewWindow(WIDTH, HEIGHT)
 	win.SetLabel("寄存器工具")
 	win.SetColor(fltk.WHITE)
-	NewMainForm()
+	NewMainForm(win)
 	win.End()
 	win.Show()
 	fltk.Run()
