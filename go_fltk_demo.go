@@ -62,7 +62,6 @@ func NewBit(x, y, w, h int) *Bit {
 	bit.SetColor(bitColorMap["0"])
 	bit.SetLabelSize(14)
 	bit.SetBox(fltk.BORDER_BOX)
-
 	return &Bit{bit}
 }
 
@@ -75,7 +74,8 @@ func NewHeader(x, y, w, h, ix int) *Header {
 	header.SetAlign(fltk.ALIGN_CENTER)
 	header.SetColor(fltk.WHITE)
 	header.SetLabelColor(headerColorMap["same"])
-	header.SetLabelSize(12)
+	header.SetLabelSize(11)
+	header.SetLabelFont(fltk.HELVETICA)
 	return &Header{header}
 }
 
@@ -84,8 +84,12 @@ type Headers []*Header
 func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 	if len(bitMap) == 1 {
 		h[c].SetLabelColor(headerColorMap["same"])
+		h[c].SetLabelSize(11)
+		h[c].SetLabelFont(fltk.HELVETICA)
 	} else {
 		h[c].SetLabelColor(headerColorMap["diff"])
+		h[c].SetLabelSize(14)
+		h[c].SetLabelFont(fltk.HELVETICA_BOLD)
 	}
 	h[c].Redraw()
 }
