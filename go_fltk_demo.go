@@ -87,6 +87,7 @@ func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 	} else {
 		h[c].SetLabelColor(headerColorMap["diff"])
 	}
+	h[c].Redraw()
 }
 
 func NewHeaders() Headers {
