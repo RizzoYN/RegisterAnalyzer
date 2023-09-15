@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -9,9 +10,13 @@ import (
 )
 
 var (
-	colorMap = map[string]fltk.Color{
+	bitColorMap = map[string]fltk.Color{
 		"0": fltk.WHITE,
 		"1": fltk.BACKGROUND_COLOR,
+	}
+	headerColorMap = map[string]fltk.Color{
+		"same": fltk.BLACK,
+		"diff": fltk.RED,
 	}
 	textMap = map[string]string{
 		"0": "1",
@@ -22,20 +27,11 @@ var (
 	bitH      = 22
 	dataWidth = 32
 	maxRow    = 2
+	Row       = 2
 	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
 	HEIGHT    = bitW + maxRow*bitH + pad*4
+	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
 )
-
-type obj interface {
-	Label() string
-}
-
-func ParseLoc(o obj) (int, int) {
-	label := strings.Split(o.Label(), " ")
-	r, _ := strconv.ParseInt(label[0], 10, 16)
-	c, _ := strconv.ParseInt(label[1], 10, 16)
-	return int(r), int(c)
-}
 
 func ParseHeight(row int) int {
 	if row == 1 {
@@ -45,234 +41,309 @@ func ParseHeight(row int) int {
 	}
 }
 
-type ClickHandler func(fltk.Event) bool
-
 type Bit struct {
-	Bit *fltk.TextDisplay
+	*fltk.Box
 }
 
-func (b *Bit) Click() ClickHandler {
+func (b *Bit) Click(e fltk.Event) bool {
+	if e == fltk.Event(fltk.LeftMouse) {
+		val := b.Label()
+		str := textMap[val]
+		b.SetLabel(str)
+		b.SetColor(bitColorMap[str])
+		return true
+	}
+	return false
+}
+
+func NewBit(x, y, w, h int) *Bit {
+	bit := fltk.NewBox(fltk.FLAT_BOX, x, y, w, h, "0")
+	bit.SetAlign(fltk.ALIGN_CENTER)
+	bit.SetColor(bitColorMap["0"])
+	bit.SetLabelSize(14)
+	bit.SetBox(fltk.BORDER_BOX)
+
+	return &Bit{bit}
+}
+
+type Header struct {
+	*fltk.Box
+}
+
+func NewHeader(x, y, w, h, ix int) *Header {
+	header := fltk.NewBox(fltk.FLAT_BOX, x, y, w, h, fmt.Sprint(ix))
+	header.SetAlign(fltk.ALIGN_CENTER)
+	header.SetColor(fltk.WHITE)
+	header.SetLabelColor(headerColorMap["same"])
+	header.SetLabelSize(14)
+	return &Header{header}
+}
+
+type Headers []*Header
+
+func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
+	if len(bitMap) == 1 {
+		h[c].SetColor(headerColorMap["same"])
+	} else {
+		h[c].SetColor(headerColorMap["diff"])
+	}
+}
+
+func NewHeaders() Headers {
+	headers := make([]*Header, dataWidth)
+	for c := 0; c < dataWidth; c++ {
+		head := NewHeader(c*(bitW+pad)+pad, pad, bitW, bitW, dataWidth-1-c)
+		headers[c] = head
+	}
+	return headers
+}
+
+type BitRow struct {
+	BitLocs  []*Bit
+	Num      *fltk.TextEditor
+	LShift   *fltk.Button
+	ShiftNum *fltk.TextEditor
+	RShift   *fltk.Button
+	Reverse  *fltk.Button
+	Invert   *fltk.Button
+	Clear    *fltk.Button
+	base     int
+}
+
+func (b *BitRow) GetBitString() []string {
+	bitList := make([]string, dataWidth)
+	for c := 0; c < dataWidth; c++ {
+		bitList[c] = b.BitLocs[c].Label()
+	}
+	return bitList
+}
+
+func (b *BitRow) SetNum(bin int64) {
+	switch b.base {
+	case 16:
+		b.Num.Buffer().SetText(fmt.Sprintf("%x", bin))
+	case 10:
+		b.Num.Buffer().SetText(fmt.Sprint(bin))
+	case 8:
+		b.Num.Buffer().SetText(fmt.Sprintf("%o", bin))
+	}
+}
+
+func (b *BitRow) UpdateNum() {
+	bitList := b.GetBitString()
+	binStr := strings.Join(bitList, "")
+	bin, _ := strconv.ParseInt(binStr, 2, dataWidth*2)
+	b.SetNum(bin)
+}
+
+func (b *BitRow) ClickClear(fn func()) func() {
+	return func() {
+		for c := 0; c < dataWidth; c++ {
+			b.BitLocs[c].SetLabel("0")
+			b.BitLocs[c].SetColor(bitColorMap["0"])
+		}
+		b.Num.Buffer().SetText("0")
+		fn()
+	}
+}
+
+func (b *BitRow) ClickInvert(fn func()) func() {
+	return func() {
+		for c := 0; c < dataWidth; c++ {
+			b.BitLocs[c].Click(fltk.Event(fltk.LeftMouse))
+		}
+		b.UpdateNum()
+		fn()
+	}
+}
+
+func (b *BitRow) GetCurrentNum() (int64, int) {
+	num, _ := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
+	shiftNum, _ := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
+	return num, int(shiftNum)
+}
+
+func (b *BitRow) UpdateBit(num int64) {
+	binStr := strconv.FormatInt(num, 2)
+	n := len(binStr)
+	sum := 0
+	for c := dataWidth - 1; c >= 0; c-- {
+		if sum < n {
+			s := string(binStr[n-sum-1])
+			b.BitLocs[c].SetLabel(s)
+			b.BitLocs[c].SetColor(bitColorMap[s])
+		} else {
+			b.BitLocs[c].SetLabel("0")
+			b.BitLocs[c].SetColor(bitColorMap["0"])
+		}
+		sum++
+	}
+}
+
+func (b *BitRow) UpdateBitNum(num int64) {
+	b.SetNum(num)
+	b.UpdateBit(num)
+}
+
+func (b *BitRow) ClickLShift(fn func()) func() {
+	return func() {
+		num, shiftNum := b.GetCurrentNum()
+		num = (num << shiftNum) & MaxNum
+		b.UpdateBitNum(num)
+		fn()
+	}
+}
+
+func (b *BitRow) ClickRShift(fn func()) func() {
+	return func() {
+		num, shiftNum := b.GetCurrentNum()
+		num = (num >> shiftNum) & MaxNum
+		b.UpdateBitNum(num)
+		fn()
+	}
+}
+
+func (b *BitRow) ClickReverse(fn func()) func() {
+	return func() {
+		for i, j := 0, len(b.BitLocs)-1; i < j; i, j = i+1, j-1 {
+			h := b.BitLocs[i].Label()
+			e := b.BitLocs[j].Label()
+			b.BitLocs[i].SetLabel(e)
+			b.BitLocs[i].SetColor(bitColorMap[e])
+			b.BitLocs[j].SetLabel(h)
+			b.BitLocs[j].SetColor(bitColorMap[h])
+		}
+		b.UpdateNum()
+		fn()
+	}
+}
+
+func (b *BitRow) KeyType(fn func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
-		val := b.Bit.Buffer().Text()
+		if e == fltk.KEYUP {
+			num, _ := b.GetCurrentNum()
+			b.UpdateBit(num)
+			fn()
+		}
+		return false
+	}
+}
+
+func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bool {
+	return func(e fltk.Event) bool {
 		if e == fltk.Event(fltk.LeftMouse) {
-			b.Bit.Buffer().SetText(textMap[val])
+			fn(e)
+			fnc()
+			b.UpdateNum()
 			return true
 		}
 		return false
 	}
 }
 
-func (b *Bit) DrawHandler(f func()) {
-	val := b.Bit.Buffer().Text()
-	fltk.SetDrawFont(fltk.HELVETICA, 14)
-	fltk.DrawBox(fltk.BORDER_BOX, b.Bit.X(), b.Bit.Y(), b.Bit.W(), b.Bit.H(), colorMap[val])
-	fltk.SetDrawColor(fltk.BLACK)
-	fltk.Draw(textMap[textMap[val]], b.Bit.X(), b.Bit.Y(), b.Bit.W(), b.Bit.H(), fltk.ALIGN_CENTER)
-}
-
-func NewBit(x, y, w, h int, ix string, fns []func(...interface{})) *Bit {
-	b := new(Bit)
-	bit := fltk.NewTextDisplay(x, y, w, h)
-	buf := fltk.NewTextBuffer()
-	buf.SetText("0")
-	bit.SetBuffer(buf)
-	bit.SetDrawHandler(b.DrawHandler)
-	bit.SetLabel(ix)
-	bit.SetLabelType(fltk.NO_LABEL)
-	b.Bit = bit
-	b.Bit.SetEventHandler(b.Click())
-	return b
-}
-
-type Bits struct {
-	Bits []*Bit
-}
-
-func NewBits(row int, fns []func(...interface{})) *Bits {
-	bits := make([]*Bit, dataWidth)
-	h := ParseHeight(row)
-	for c := 0; c < dataWidth; c++ {
-		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH, fmt.Sprintf("%d %d", row-1, c), fns)
-		bits[c] = bit
-	}
-	return &Bits{Bits: bits}
-}
-
-type Header struct {
-	Header *fltk.TextDisplay
-}
-
-func (h *Header) DrawHandler(color fltk.Color) func(func()) {
-	return func(fn func()) {
-		fltk.SetDrawFont(fltk.HELVETICA, 14)
-		fltk.SetDrawColor(color)
-		fltk.Draw(h.Header.Buffer().Text(), h.Header.X(), h.Header.Y(), h.Header.W(), h.Header.H(), fltk.ALIGN_CENTER)
-	}
-}
-
-func (h *Header) UpdataHeader(len int) {
-	if len == 1 {
-		h.Header.SetDrawHandler(h.DrawHandler(fltk.BLACK))
-	} else {
-		h.Header.SetDrawHandler(h.DrawHandler(fltk.RED))
-	}
-}
-
-func NewHeader(x, y, w, h int, ix string) *Header {
-	header := new(Header)
-	head := fltk.NewTextDisplay(x, y, w, h)
-	buf := fltk.NewTextBuffer()
-	buf.SetText(ix)
-	head.SetBuffer(buf)
-	head.SetTextColor(fltk.BLACK)
-	head.SetDrawHandler(header.DrawHandler(fltk.BLACK))
-	header.Header = head
-	return header
-}
-
-type Headers struct {
-	Headers []*Header
-}
-
-func NewHeaders() *Headers {
-	headers := make([]*Header, dataWidth)
-	for c := 0; c < dataWidth; c++ {
-		head := NewHeader(c*(bitW+pad)+pad, pad, bitW, bitW, fmt.Sprint(dataWidth-1-c))
-		headers[c] = head
-	}
-	return &Headers{Headers: headers}
-}
-
-type NumShift struct {
-	LShift   *fltk.Button
-	ShiftNum *fltk.TextEditor
-	RShift   *fltk.Button
-}
-
-func NewNumShift(row, base int, fns ...func(...interface{})) *NumShift {
-	numShift := new(NumShift)
-	h := ParseHeight(row)
-	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
-	lShift.SetBox(fltk.BORDER_BOX)
-	lShift.SetDownBox(fltk.THIN_DOWN_BOX)
-	lShift.SetType(uint8(row*(dataWidth+1)))
-	// lShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+1))
-	// lShift.SetLabelType(fltk.NO_LABEL)
-	
-	lShift.ClearVisibleFocus()
-	numShift.LShift = lShift
-	shiftNum := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
-	shiftBuf := fltk.NewTextBuffer()
-	shiftBuf.SetText("1")
-	shiftNum.SetBox(fltk.BORDER_BOX)
-	shiftNum.SetBuffer(shiftBuf)
-	shiftNum.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+2))
-	shiftNum.SetLabelType(fltk.NO_LABEL)
-	numShift.ShiftNum = shiftNum
-	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
-	rShift.SetBox(fltk.BORDER_BOX)
-	rShift.SetDownBox(fltk.THIN_DOWN_BOX)
-	// rShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+3))
-	// rShift.SetLabelType(fltk.NO_LABEL)
-	rShift.ClearVisibleFocus()
-	numShift.RShift = rShift
-	return numShift
-}
-
-
-type BitRow struct {
-	Loc      *Bits
-	Num      *fltk.TextEditor
-	LShift   *fltk.TextDisplay
-	ShiftNum *fltk.TextEditor
-	RShift   *fltk.TextDisplay
-	Reverse  *fltk.TextDisplay
-	Invert   *fltk.TextDisplay
-	Clear    *fltk.TextDisplay
-}
-
-func NewBitRow(row int, fns ...func(...interface{})) *BitRow {
+func NewBitRow(row int, fn func()) *BitRow {
 	bitRow := new(BitRow)
-	bitRow.Loc = NewBits(row, fns)
+	bitLocs := make([]*Bit, dataWidth)
 	h := ParseHeight(row)
+	for c := 0; c < dataWidth; c++ {
+		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH)
+		bit.SetEventHandler(bitRow.Click(bit.Click, fn))
+		bitLocs[c] = bit
+	}
+	bitRow.BitLocs = bitLocs
 	num := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad, h, bitW*6, bitH)
 	numBuf := fltk.NewTextBuffer()
+	numBuf.SetText("0")
 	num.SetBox(fltk.BORDER_BOX)
 	num.SetBuffer(numBuf)
-	num.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth))
-	num.SetLabelType(fltk.NO_LABEL)
-
+	num.SetInsertPosition(1)
+	num.SetEventHandler(bitRow.KeyType(fn))
 	bitRow.Num = num
-	lShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH)
+	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
 	lShift.SetBox(fltk.BORDER_BOX)
-	lBuf := fltk.NewTextBuffer()
-	lBuf.SetText("<<")
-	lShift.SetBuffer(lBuf)
-	lShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+1))
-	lShift.SetLabelType(fltk.NO_LABEL)
-
+	lShift.ClearVisibleFocus()
+	lShift.SetLabelSize(12)
+	lShift.SetLabelFont(fltk.HELVETICA)
+	lShift.SetDownBox(fltk.FLAT_BOX)
+	lShift.SetCallback(bitRow.ClickLShift(fn))
 	bitRow.LShift = lShift
 	shiftNum := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
 	shiftBuf := fltk.NewTextBuffer()
 	shiftBuf.SetText("1")
 	shiftNum.SetBox(fltk.BORDER_BOX)
 	shiftNum.SetBuffer(shiftBuf)
-	shiftNum.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+2))
-	shiftNum.SetLabelType(fltk.NO_LABEL)
+	shiftNum.SetInsertPosition(1)
 	bitRow.ShiftNum = shiftNum
-	rShift := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH)
+	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
 	rShift.SetBox(fltk.BORDER_BOX)
-	rBuf := fltk.NewTextBuffer()
-	rBuf.SetText(">>")
-	rShift.SetBuffer(rBuf)
-	rShift.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+3))
-	rShift.SetLabelType(fltk.NO_LABEL)
-
+	rShift.SetLabelSize(12)
+	rShift.SetLabelFont(fltk.HELVETICA)
+	rShift.SetDownBox(fltk.FLAT_BOX)
+	rShift.ClearVisibleFocus()
+	rShift.SetCallback(bitRow.ClickRShift(fn))
 	bitRow.RShift = rShift
-	reverse := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH)
+	reverse := fltk.NewButton(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH, "倒序")
 	reverse.SetBox(fltk.BORDER_BOX)
-	reverseBuf := fltk.NewTextBuffer()
-	reverseBuf.SetText("倒序")
-	reverse.SetBuffer(reverseBuf)
-	reverse.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+4))
-	reverse.SetLabelType(fltk.NO_LABEL)
-
+	reverse.SetLabelSize(12)
+	reverse.SetLabelFont(fltk.HELVETICA)
+	reverse.SetDownBox(fltk.FLAT_BOX)
+	reverse.ClearVisibleFocus()
+	reverse.SetCallback(bitRow.ClickReverse(fn))
 	bitRow.Reverse = reverse
-	invert := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH)
+	invert := fltk.NewButton(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH, "转换")
 	invert.SetBox(fltk.BORDER_BOX)
-	invertBuf := fltk.NewTextBuffer()
-	invertBuf.SetText("转换")
-	invert.SetBuffer(invertBuf)
-	invert.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+5))
-	invert.SetLabelType(fltk.NO_LABEL)
-
+	invert.SetLabelSize(12)
+	invert.SetLabelFont(fltk.HELVETICA)
+	invert.ClearVisibleFocus()
+	invert.SetDownBox(fltk.FLAT_BOX)
+	invert.SetCallback(bitRow.ClickInvert(fn))
 	bitRow.Invert = lShift
-	clear := fltk.NewTextDisplay(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH)
+	clear := fltk.NewButton(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH, "清空")
 	clear.SetBox(fltk.BORDER_BOX)
-	clearBuf := fltk.NewTextBuffer()
-	clearBuf.SetText("清空")
-	clear.SetBuffer(clearBuf)
-	clear.SetLabel(fmt.Sprintf("%d %d", row-1, dataWidth+6))
-	clear.SetLabelType(fltk.NO_LABEL)
-
+	clear.SetLabelSize(12)
+	clear.SetLabelFont(fltk.HELVETICA)
+	clear.ClearVisibleFocus()
+	clear.SetDownBox(fltk.FLAT_BOX)
+	clear.SetCallback(bitRow.ClickClear(fn))
 	bitRow.Clear = clear
+	bitRow.base = 16
 	return bitRow
 }
 
+type MainForm struct {
+	Headers Headers
+	BitRows []*BitRow
+}
 
+func (m *MainForm) Updateheaders() {
+	for c := 0; c < dataWidth; c++ {
+		bitMap := make(map[string]int, Row)
+		for r := 0; r < Row; r++ {
+			val := m.BitRows[r].BitLocs[c].Label()
+			bitMap[val] = 0
+		}
+		m.Headers.UpdateHeader(bitMap, c)
+	}
+}
+
+func NewMainForm() {
+	mainForm := new(MainForm)
+	bitRows := make([]*BitRow, maxRow)
+	for r := 0; r < maxRow+1; r++ {
+		if r == 0 {
+			mainForm.Headers = NewHeaders()
+		} else {
+			bitRows[r-1] = NewBitRow(r, mainForm.Updateheaders)
+		}
+	}
+}
 
 func main() {
 	fltk.InitStyles()
 	win := fltk.NewWindow(WIDTH, HEIGHT)
 	win.SetLabel("寄存器工具")
 	win.SetColor(fltk.WHITE)
-	for r := 0; r < maxRow+1; r++ {
-		if r == 0 {
-			NewHeaders()
-		} else {
-			NewNumShift(r,r)
-		}
-	}
+	NewMainForm()
 	win.End()
 	win.Show()
 	fltk.Run()
