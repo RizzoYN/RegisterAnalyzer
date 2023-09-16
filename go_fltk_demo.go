@@ -236,8 +236,10 @@ func (b *BitRow) KeyType(fn func(), fnc func(i int64, j int)) func(fltk.Event) b
 	return func(e fltk.Event) bool {
 		if e == fltk.KEYUP {
 			num, shiftNum := b.GetCurrentNum()
-			if num == 0 || shiftNum == 0 {
+			if num == 0 {
 				b.SetNum(b.lastNum)
+			} else if shiftNum == 0 {
+				b.ShiftNum.Buffer().SetText(b.lastShiftNum)
 			} else {
 				b.UpdateBit(num)
 				fn()
