@@ -167,27 +167,8 @@ func (b *BitRow) ClickInvert(fn func()) func() {
 }
 
 func (b *BitRow) GetCurrentNum() (int64, int) {
-	defer func() {
-        if err := recover(); err != nil {
-            fmt.Print("")
-        }
-    }()
-	numStr := b.Num.Buffer().Text()
-	if numStr == "" {
-		numStr = "0"
-	}
-	numShf := b.ShiftNum.Buffer().Text()
-	if numShf == "" {
-		numShf = "0"
-	}
-	num, err := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
-	if err != nil {
-		panic("")
-	}
-	shiftNum, err := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
-	if err != nil {
-		panic("")
-	}
+	num, _ := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
+	shiftNum, _ := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
 	return num, int(shiftNum)
 }
 
