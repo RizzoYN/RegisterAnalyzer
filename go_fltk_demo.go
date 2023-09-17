@@ -114,7 +114,7 @@ type BitRow struct {
 	Clear        *fltk.Button
 	base         int
 	lastNum      int64
-	lastShiftNum int
+	lastShiftNum int64
 }
 
 func (b *BitRow) GetBitString() []string {
@@ -167,9 +167,27 @@ func (b *BitRow) ClickInvert(fn func()) func() {
 }
 
 func (b *BitRow) GetCurrentNum() (int64, int) {
-	num, _ := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
-	shiftNum, _ := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
-	return num, int(shiftNum)
+	curNum := b.Num.Buffer().Text()
+	if curNum == "" {
+		b.lastNum = 0
+	}
+	curShiftNum := b.Num.Buffer().Text()
+	if curShiftNum == "" {
+		b.lastShiftNum = 1
+	}
+	num, err := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
+	if err == nil {
+		b.lastNum = num
+	} else {
+		b.SetNum(b.lastNum)
+	}
+	shiftNum, err := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
+	if err == nil {
+		b.lastShiftNum = shiftNum
+	} else {
+		b.ShiftNum.Buffer().SetText(fmt.Sprint(b.lastShiftNum))
+	}
+	return b.lastNum, int(b.lastShiftNum)
 }
 
 func (b *BitRow) UpdateBit(num int64) {
@@ -227,24 +245,12 @@ func (b *BitRow) ClickReverse(fn func()) func() {
 	}
 }
 
-func (b *BitRow) UpdateLasts(num int64, shiftNum int) {
-	b.lastNum = num
-	b.lastShiftNum = shiftNum
-}
-
-func (b *BitRow) KeyType(fn func(), fnc func(i int64, j int)) func(fltk.Event) bool {
+func (b *BitRow) KeyType(fn func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
 		if e == fltk.KEYUP {
-			num, shiftNum := b.GetCurrentNum()
-			if num == 0 {
-				b.SetNum(b.lastNum)
-			} else if shiftNum == 0 {
-				b.ShiftNum.Buffer().SetText(b.lastShiftNum)
-			} else {
-				b.UpdateBit(num)
-				fn()
-				fnc(num, shiftNum)
-			}
+			num, _ := b.GetCurrentNum()
+			b.UpdateBit(num)
+			fn()
 			return true
 		}
 		return false
@@ -280,7 +286,7 @@ func NewBitRow(row int, fn func()) *BitRow {
 	num.SetBuffer(numBuf)
 	num.SetInsertPosition(1)
 	num.SetWrapMode(fltk.WRAP_NONE)
-	num.SetEventHandler(bitRow.KeyType(fn, bitRow.UpdateLasts))
+	num.SetEventHandler(bitRow.KeyType(fn))
 	bitRow.Num = num
 	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
 	lShift.SetBox(fltk.BORDER_BOX)
