@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+
 	// "unsafe"
 
 	"github.com/pwiecz/go-fltk"
@@ -117,17 +118,18 @@ func NewHeaders() Headers {
 }
 
 type BitRow struct {
-	BitLocs      []*Bit
-	Num          *fltk.TextEditor
-	LShift       *fltk.Button
-	ShiftNum     *fltk.TextEditor
-	RShift       *fltk.Button
-	Reverse      *fltk.Button
-	Invert       *fltk.Button
-	Clear        *fltk.Button
-	base         int
-	lastNum      int64
-	lastShiftNum int64
+	BitLocs         []*Bit
+	Num             *fltk.Input
+	LShift          *fltk.Button
+	ShiftNum        *fltk.Input
+	RShift          *fltk.Button
+	Reverse         *fltk.Button
+	Invert          *fltk.Button
+	Clear           *fltk.Button
+	base            int
+	lastNum         int64
+	lastShiftNum    int64
+	ShiftNumDisplay *fltk.Box
 }
 
 func (b *BitRow) GetBitString() []string {
@@ -141,11 +143,11 @@ func (b *BitRow) GetBitString() []string {
 func (b *BitRow) SetNum(num int64) {
 	switch b.base {
 	case 16:
-		b.Num.Buffer().SetText(fmt.Sprintf("%x", num))
+		b.Num.SetValue(fmt.Sprintf("%x", num))
 	case 10:
-		b.Num.Buffer().SetText(fmt.Sprint(num))
+		b.Num.SetValue(fmt.Sprint(num))
 	case 8:
-		b.Num.Buffer().SetText(fmt.Sprintf("%o", num))
+		b.Num.SetValue(fmt.Sprintf("%o", num))
 	}
 }
 
@@ -162,10 +164,12 @@ func (b *BitRow) ClickClear(fn func()) func() {
 			b.BitLocs[c].SetLabel("0")
 			b.BitLocs[c].SetColor(bitColorMap["0"])
 		}
-		b.Num.Buffer().SetText("0")
+		b.Num.SetValue("0")
 		if fn != nil {
 			fn()
 		}
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
 	}
 }
 
@@ -176,33 +180,34 @@ func (b *BitRow) ClickInvert(fn func()) func() {
 		}
 		b.UpdateNum()
 		fn()
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
 	}
 }
 
 func (b *BitRow) GetCurrentNum() (int64, int) {
-	curNum := b.Num.Buffer().Text()
+	curNum := b.Num.Value()
 	if curNum == "" {
 		b.lastNum = 0
 	}
-	curShiftNum := b.ShiftNum.Buffer().Text()
+	curShiftNum := b.ShiftNum.Value()
 	if curShiftNum == "" {
 		b.lastShiftNum = 0
 	}
-	num, err := strconv.ParseInt(b.Num.Buffer().Text(), b.base, dataWidth*2)
+	num, err := strconv.ParseInt(b.Num.Value(), b.base, dataWidth*2)
 	if err == nil {
 		b.lastNum = num
 	} else {
 		b.SetNum(b.lastNum)
-		b.Num.SetInsertPosition(len(fmt.Sprint(b.lastNum)))
 	}
-	shiftNum, err := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
+	shiftNum, err := strconv.ParseInt(b.ShiftNum.Value(), 10, dataWidth*2)
 	if err == nil {
 		b.lastShiftNum = shiftNum
 	} else {
 		if b.lastShiftNum != 0 {
-			b.ShiftNum.Buffer().SetText(fmt.Sprint(b.lastShiftNum))
+			b.ShiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
 		} else {
-			b.ShiftNum.Buffer().SetText("")
+			b.ShiftNum.SetValue("")
 		}
 	}
 	return b.lastNum, int(b.lastShiftNum)
@@ -235,6 +240,8 @@ func (b *BitRow) ClickLShift(fn func()) func() {
 		num, shiftNum := b.GetCurrentNum()
 		num = (num << shiftNum) & MaxNum
 		b.UpdateBitNum(num)
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
 		fn()
 	}
 }
@@ -245,6 +252,8 @@ func (b *BitRow) ClickRShift(fn func()) func() {
 		num = (num >> shiftNum) & MaxNum
 		b.UpdateBitNum(num)
 		fn()
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
 	}
 }
 
@@ -260,6 +269,8 @@ func (b *BitRow) ClickReverse(fn func()) func() {
 		}
 		b.UpdateNum()
 		fn()
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
 	}
 }
 
@@ -269,6 +280,8 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 			num, _ := b.GetCurrentNum()
 			b.UpdateBit(num)
 			fn()
+			b.ShiftNum.Hide()
+			b.ShiftNumDisplay.Show()
 			return true
 		}
 		return false
@@ -277,7 +290,8 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 
 func (b *BitRow) ShiftNumTyped(e fltk.Event) bool {
 	if e == fltk.KEYUP {
-		b.GetCurrentNum()
+		_, shiftNum := b.GetCurrentNum()
+		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
 		return true
 	}
 	return false
@@ -289,10 +303,22 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 			fn(e)
 			fnc()
 			b.UpdateNum()
+			b.ShiftNum.Hide()
+			b.ShiftNumDisplay.Show()
 			return true
 		}
 		return false
 	}
+}
+
+func (b *BitRow) DisplayClick(e fltk.Event) bool {
+	if e == fltk.Event(fltk.LeftMouse) {
+		b.ShiftNumDisplay.Hide()
+		b.ShiftNum.Show()
+		b.ShiftNum.TakeFocus()
+		return true
+	}
+	return false
 }
 
 func NewBitRow(row int, fn func()) *BitRow {
@@ -305,13 +331,9 @@ func NewBitRow(row int, fn func()) *BitRow {
 		bitLocs[c] = bit
 	}
 	bitRow.BitLocs = bitLocs
-	num := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad, h, bitW*6, bitH)
-	numBuf := fltk.NewTextBuffer()
-	numBuf.SetText("0")
+	num := fltk.NewInput(dataWidth*(bitW+pad)+pad, h, bitW*6, bitH)
+	num.SetValue("0")
 	num.SetBox(fltk.BORDER_BOX)
-	num.SetBuffer(numBuf)
-	num.SetInsertPosition(1)
-	num.SetWrapMode(fltk.WRAP_NONE)
 	num.SetEventHandler(bitRow.KeyTyped(fn))
 	bitRow.Num = num
 	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
@@ -322,14 +344,11 @@ func NewBitRow(row int, fn func()) *BitRow {
 	lShift.SetDownBox(fltk.FLAT_BOX)
 	lShift.SetCallback(bitRow.ClickLShift(fn))
 	bitRow.LShift = lShift
-	shiftNum := fltk.NewTextEditor(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
-	shiftBuf := fltk.NewTextBuffer()
-	shiftBuf.SetText("1")
+	shiftNum := fltk.NewInput(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
+	shiftNum.SetValue("1")
 	shiftNum.SetBox(fltk.BORDER_BOX)
-	shiftNum.SetBuffer(shiftBuf)
-	shiftNum.SetInsertPosition(1)
-	shiftNum.SetWrapMode(fltk.WRAP_NONE)
 	shiftNum.SetEventHandler(bitRow.ShiftNumTyped)
+	shiftNum.Hide()
 	bitRow.ShiftNum = shiftNum
 	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
 	rShift.SetBox(fltk.BORDER_BOX)
@@ -366,6 +385,12 @@ func NewBitRow(row int, fn func()) *BitRow {
 	bitRow.base = 16
 	bitRow.lastNum = 0
 	bitRow.lastShiftNum = 1
+	shiftDisplay := fltk.NewBox(fltk.BORDER_BOX, dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH, fmt.Sprint(bitRow.lastShiftNum))
+	shiftDisplay.SetAlign(fltk.ALIGN_CENTER)
+	shiftDisplay.SetColor(fltk.WHITE)
+	shiftDisplay.SetLabelFont(fltk.HELVETICA)
+	shiftDisplay.SetEventHandler(bitRow.DisplayClick)
+	bitRow.ShiftNumDisplay = shiftDisplay
 	return bitRow
 }
 
@@ -400,6 +425,10 @@ func (m *MainForm) Add(w *fltk.Window) func() {
 		}
 		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
 		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		for r := 0; r < Row-1; r++ {
+			m.BitRows[r].ShiftNum.Hide()
+			m.BitRows[r].ShiftNumDisplay.Show()
+		}
 		bitRow := m.BitRows[Row-1]
 		for _, obj := range bitRow.BitLocs {
 			obj.Show()
@@ -411,6 +440,7 @@ func (m *MainForm) Add(w *fltk.Window) func() {
 		bitRow.Reverse.Show()
 		bitRow.Invert.Show()
 		bitRow.Clear.Show()
+		bitRow.ShiftNumDisplay.Show()
 		m.Updateheaders()
 	}
 }
@@ -424,6 +454,10 @@ func (m *MainForm) Remove(w *fltk.Window) func() {
 		}
 		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
 		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		for r := 0; r < Row; r++ {
+			m.BitRows[r].ShiftNum.Hide()
+			m.BitRows[r].ShiftNumDisplay.Show()
+		}
 		bitRow := m.BitRows[Row]
 		bitRow.ClickClear(nil)()
 		for _, obj := range bitRow.BitLocs {
@@ -436,6 +470,7 @@ func (m *MainForm) Remove(w *fltk.Window) func() {
 		bitRow.Reverse.Hide()
 		bitRow.Invert.Hide()
 		bitRow.Clear.Hide()
+		bitRow.ShiftNumDisplay.Hide()
 		m.Updateheaders()
 	}
 }
@@ -446,6 +481,10 @@ func (m *MainForm) BaseChoise(base int) func() {
 			num, _ := m.BitRows[r].GetCurrentNum()
 			m.BitRows[r].base = base
 			m.BitRows[r].SetNum(num)
+			if r < Row {
+				m.BitRows[r].ShiftNum.Hide()
+				m.BitRows[r].ShiftNumDisplay.Show()
+			}
 		}
 	}
 }
@@ -480,6 +519,7 @@ func NewMainForm(w *fltk.Window) {
 				bitRow.Reverse.Hide()
 				bitRow.Invert.Hide()
 				bitRow.Clear.Hide()
+				bitRow.ShiftNumDisplay.Hide()
 			}
 			bitRows[r-1] = bitRow
 		}
