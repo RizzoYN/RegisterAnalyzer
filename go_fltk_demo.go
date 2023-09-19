@@ -16,9 +16,9 @@ func GetSystemMetrics(nIndex int) int {
 	return int(ret)
 }
 
-func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
-	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
-}
+// func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
+// 	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
+// }
 
 var (
 	bitColorMap = map[string]fltk.Color{
