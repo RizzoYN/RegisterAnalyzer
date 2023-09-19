@@ -289,6 +289,10 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 }
 
 func (b *BitRow) ShiftNumTyped(e fltk.Event) bool {
+	if e == fltk.Event(fltk.LeftMouse) {
+		b.ShiftNum.Hide()
+		b.ShiftNumDisplay.Show()
+	}
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
 		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
