@@ -276,6 +276,10 @@ func (b *BitRow) ClickReverse(fn func()) func() {
 
 func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
+		if e == fltk.Event(fltk.LeftMouse) {
+			b.ShiftNum.Hide()
+			b.ShiftNumDisplay.Show()
+		}
 		if e == fltk.KEYUP {
 			num, _ := b.GetCurrentNum()
 			b.UpdateBit(num)
@@ -289,10 +293,6 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 }
 
 func (b *BitRow) ShiftNumTyped(e fltk.Event) bool {
-	if e == fltk.Event(fltk.LeftMouse) {
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
-	}
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
 		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
@@ -318,6 +318,7 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 func (b *BitRow) DisplayClick(e fltk.Event) bool {
 	if e == fltk.Event(fltk.LeftMouse) {
 		b.ShiftNumDisplay.Hide()
+		b.ShiftNum.SetValue("")
 		b.ShiftNum.Show()
 		b.ShiftNum.TakeFocus()
 		return true
