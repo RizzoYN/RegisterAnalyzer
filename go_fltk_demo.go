@@ -6,31 +6,18 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"unsafe"
+	// "unsafe"
 
 	"github.com/pwiecz/go-fltk"
-	"github.com/lxn/win"
 )
-
-func SetConsoleTitle(title string) {
-	kernel32, _ := syscall.LoadLibrary("kernel32.dll")
-	defer syscall.FreeLibrary(kernel32)
-	_SetConsoleTitle, _ := syscall.GetProcAddress(kernel32, "SetConsoleTitleW")
-	syscall.Syscall(_SetConsoleTitle, 1, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(title))), 0, 0)
-}
-
-func FindWindow(str string) win.HWND {
-    hwnd := win.FindWindow(nil, syscall.StringToUTF16Ptr(str))
-    return hwnd
-}
 
 func GetSystemMetrics(nIndex int) int {
 	ret, _, _ := syscall.NewLazyDLL(`User32.dll`).NewProc(`GetSystemMetrics`).Call(uintptr(nIndex))
 	return int(ret)
 }
 
-func SetWindowPos(hWnd win.HWND, hWndInsertAfter, x, y, Width, Height, flags int) {
-	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(uintptr(hWnd), uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
+func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
+	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
 }
 
 var (
@@ -390,7 +377,7 @@ type MainForm struct {
 	Base16  *fltk.RadioRoundButton
 	Base10  *fltk.RadioRoundButton
 	Base8   *fltk.RadioRoundButton
-	OnTop   *fltk.CheckButton
+	// OnTop   *fltk.CheckButton
 }
 
 func (m *MainForm) Updateheaders() {
@@ -463,16 +450,16 @@ func (m *MainForm) BaseChoise(base int) func() {
 	}
 }
 
-func (m *MainForm) SetOntop(w *fltk.Window) func() {
-	return func() {
-		p := FindWindow("寄存器工具use go-fltk")
-		if m.OnTop.Value() {
-			SetWindowPos(p, 0, StartX, StartY, WIDTH, HEIGHT, 2)
-		} else {
-			SetWindowPos(p, -2, StartX, StartY, WIDTH, HEIGHT, 2)
-		}
-	}
-}
+// func (m *MainForm) SetOntop(w *fltk.Window) func() {
+// 	return func() {
+// 		p := uintptr(unsafe.Pointer(w))
+// 		if m.OnTop.Value() {
+// 			SetWindowPos(p, -1, StartX, StartY, WIDTH, HEIGHT, 2)
+// 		} else {
+// 			SetWindowPos(p, -2, StartX, StartY, WIDTH, HEIGHT, 2)
+// 		}
+// 	}
+// }
 
 func NewMainForm(w *fltk.Window) {
 	mainForm := new(MainForm)
@@ -531,16 +518,14 @@ func NewMainForm(w *fltk.Window) {
 	rmR.SetCallback(mainForm.Remove(w))
 	mainForm.AddRow = addR
 	mainForm.RmRow = rmR
-	onTop := fltk.NewCheckButton(WIDTH-pad-20, pad*4, 1206, 20, "置顶")
-	onTop.ClearVisibleFocus()
-	onTop.SetAlign(fltk.ALIGN_LEFT)
-	onTop.SetCallback(mainForm.SetOntop(w))
-	onTop.Deactivate()
-	mainForm.OnTop = onTop
+	// onTop := fltk.NewCheckButton(WIDTH-pad-20, pad*4, 1206, 20, "置顶")
+	// onTop.ClearVisibleFocus()
+	// onTop.SetAlign(fltk.ALIGN_LEFT)
+	// onTop.SetCallback(mainForm.SetOntop(w))
+	// mainForm.OnTop = onTop
 }
 
 func main() {
-	SetConsoleTitle("寄存器工具use go-fltk")
 	fltk.InitStyles()
 	win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT)
 	win.SetLabel("寄存器工具")
