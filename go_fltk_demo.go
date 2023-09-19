@@ -26,7 +26,7 @@ var (
 	bitW      = 18
 	bitH      = 22
 	dataWidth = 32
-	maxRow    = 3
+	maxRow    = 2
 	Row       = 1
 	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
 	HEIGHT    = bitW + Row*bitH + pad*(3+Row) + 30
@@ -171,7 +171,7 @@ func (b *BitRow) GetCurrentNum() (int64, int) {
 	if curNum == "" {
 		b.lastNum = 0
 	}
-	curShiftNum := b.Num.Buffer().Text()
+	curShiftNum := b.ShiftNum.Buffer().Text()
 	if curShiftNum == "" {
 		b.lastShiftNum = 0
 	}
@@ -180,6 +180,7 @@ func (b *BitRow) GetCurrentNum() (int64, int) {
 		b.lastNum = num
 	} else {
 		b.SetNum(b.lastNum)
+		b.Num.SetInsertPosition(len(fmt.Sprint(b.lastNum)))
 	}
 	shiftNum, err := strconv.ParseInt(b.ShiftNum.Buffer().Text(), 10, dataWidth*2)
 	if err == nil {
