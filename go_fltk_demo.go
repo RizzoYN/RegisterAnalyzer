@@ -422,8 +422,7 @@ func (m *MainForm) Add(w *fltk.Window) func() {
 		if Row == maxRow {
 			m.AddRow.Deactivate()
 		}
-		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		w.Resize(w.X(), w.Y(), WIDTH, bitW + Row*bitH + pad*(3+Row) + 30)
 		for r := 0; r < Row-1; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -451,8 +450,7 @@ func (m *MainForm) Remove(w *fltk.Window) func() {
 		if Row == 1 {
 			m.RmRow.Deactivate()
 		}
-		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		w.Resize(w.X(), w.Y(), WIDTH, bitW + Row*bitH + pad*(3+Row) + 30)
 		for r := 0; r < Row; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -551,8 +549,7 @@ func NewMainForm(w *fltk.Window) {
 
 func main() {
 	fltk.InitStyles()
-	win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT)
-	win.SetLabel("寄存器工具")
+	win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具")
 	win.SetColor(fltk.WHITE)
 	NewMainForm(win)
 	win.End()
