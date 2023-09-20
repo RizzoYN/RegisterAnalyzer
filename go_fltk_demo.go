@@ -162,8 +162,7 @@ func (b *BitRow) ClickClear(fn func()) func() {
 		if fn != nil {
 			fn()
 		}
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
+		b.Display()
 	}
 }
 
@@ -174,8 +173,7 @@ func (b *BitRow) ClickInvert(fn func()) func() {
 		}
 		b.UpdateNum()
 		fn()
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
+		b.Display()
 	}
 }
 
@@ -230,8 +228,7 @@ func (b *BitRow) ClickLShift(fn func()) func() {
 		num, shiftNum := b.GetCurrentNum()
 		num = (num << shiftNum) & MaxNum
 		b.UpdateBitNum(num)
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
+		b.Display()
 		fn()
 	}
 }
@@ -242,8 +239,7 @@ func (b *BitRow) ClickRShift(fn func()) func() {
 		num = (num >> shiftNum) & MaxNum
 		b.UpdateBitNum(num)
 		fn()
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
+		b.Display()
 	}
 }
 
@@ -259,23 +255,20 @@ func (b *BitRow) ClickReverse(fn func()) func() {
 		}
 		b.UpdateNum()
 		fn()
-		b.ShiftNum.Hide()
-		b.ShiftNumDisplay.Show()
+		b.Display()
 	}
 }
 
 func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
 		if e == fltk.Event(fltk.LeftMouse) {
-			b.ShiftNum.Hide()
-			b.ShiftNumDisplay.Show()
+			b.Display()
 		}
 		if e == fltk.KEYUP {
 			num, _ := b.GetCurrentNum()
 			b.UpdateBit(num)
 			fn()
-			b.ShiftNum.Hide()
-			b.ShiftNumDisplay.Show()
+			b.Display()
 			return true
 		}
 		return false
@@ -302,8 +295,7 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 			fn(e)
 			fnc()
 			b.UpdateNum()
-			b.ShiftNum.Hide()
-			b.ShiftNumDisplay.Show()
+			b.Display()
 			return true
 		}
 		return false
@@ -319,6 +311,39 @@ func (b *BitRow) DisplayClick(e fltk.Event) bool {
 		return true
 	}
 	return false
+}
+
+func (b *BitRow) Display() {
+	b.ShiftNum.Hide()
+	b.ShiftNumDisplay.Show()
+}
+
+func (b *BitRow) Hide() {
+	for _, obj := range b.BitLocs {
+		obj.Hide()
+	}
+	b.Num.Hide()
+	b.LShift.Hide()
+	b.ShiftNum.Hide()
+	b.RShift.Hide()
+	b.Reverse.Hide()
+	b.Invert.Hide()
+	b.Clear.Hide()
+	b.ShiftNumDisplay.Hide()
+}
+
+func (b *BitRow) Show() {
+	for _, obj := range b.BitLocs {
+		obj.Show()
+	}
+	b.Num.Show()
+	b.LShift.Show()
+	b.ShiftNum.Show()
+	b.RShift.Show()
+	b.Reverse.Show()
+	b.Invert.Show()
+	b.Clear.Show()
+	b.ShiftNumDisplay.Show()
 }
 
 func NewBitRow(row int, fn func()) *BitRow {
@@ -422,23 +447,14 @@ func (m *MainForm) Add(w *fltk.Window) func() {
 		if Row == maxRow {
 			m.AddRow.Deactivate()
 		}
-		w.Resize(w.X(), w.Y(), WIDTH, bitW + Row*bitH + pad*(3+Row) + 30)
+		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row-1; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
 		}
 		bitRow := m.BitRows[Row-1]
-		for _, obj := range bitRow.BitLocs {
-			obj.Show()
-		}
-		bitRow.Num.Show()
-		bitRow.LShift.Show()
-		bitRow.ShiftNum.Show()
-		bitRow.RShift.Show()
-		bitRow.Reverse.Show()
-		bitRow.Invert.Show()
-		bitRow.Clear.Show()
-		bitRow.ShiftNumDisplay.Show()
+		bitRow.Show()
 		m.Updateheaders()
 	}
 }
@@ -450,24 +466,15 @@ func (m *MainForm) Remove(w *fltk.Window) func() {
 		if Row == 1 {
 			m.RmRow.Deactivate()
 		}
-		w.Resize(w.X(), w.Y(), WIDTH, bitW + Row*bitH + pad*(3+Row) + 30)
+		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
 		}
 		bitRow := m.BitRows[Row]
 		bitRow.ClickClear(nil)()
-		for _, obj := range bitRow.BitLocs {
-			obj.Hide()
-		}
-		bitRow.Num.Hide()
-		bitRow.LShift.Hide()
-		bitRow.ShiftNum.Hide()
-		bitRow.RShift.Hide()
-		bitRow.Reverse.Hide()
-		bitRow.Invert.Hide()
-		bitRow.Clear.Hide()
-		bitRow.ShiftNumDisplay.Hide()
+		bitRow.Hide()
 		m.Updateheaders()
 	}
 }
@@ -495,17 +502,7 @@ func NewMainForm(w *fltk.Window) {
 		} else {
 			bitRow := NewBitRow(r, mainForm.Updateheaders)
 			if r > Row {
-				for _, obj := range bitRow.BitLocs {
-					obj.Hide()
-				}
-				bitRow.Num.Hide()
-				bitRow.LShift.Hide()
-				bitRow.ShiftNum.Hide()
-				bitRow.RShift.Hide()
-				bitRow.Reverse.Hide()
-				bitRow.Invert.Hide()
-				bitRow.Clear.Hide()
-				bitRow.ShiftNumDisplay.Hide()
+				bitRow.Hide()
 			}
 			bitRows[r-1] = bitRow
 		}
