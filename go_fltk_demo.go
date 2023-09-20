@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"unsafe"
 
 	"github.com/pwiecz/go-fltk"
 )
