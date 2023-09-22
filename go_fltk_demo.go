@@ -5,10 +5,21 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"syscall"
+
+	// "syscall"
 
 	"github.com/pwiecz/go-fltk"
 )
+
+// windows
+// func GetSystemMetrics(nIndex int) int {
+// 	ret, _, _ := syscall.NewLazyDLL(`User32.dll`).NewProc(`GetSystemMetrics`).Call(uintptr(nIndex))
+// 	return int(ret)
+// }
+
+// func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
+// 	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
+// }
 
 var (
 	bitColorMap = map[string]fltk.Color{
@@ -30,16 +41,11 @@ var (
 	maxRow    = 2
 	Row       = 1
 	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
-	HEIGHT    = bitW + Row*bitH + pad*(3+Row) + 30
+	HEIGHT    = bitW + maxRow*bitH + pad*(3+maxRow) + 30
 	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
-	StartX    = GetSystemMetrics(0)/2 - WIDTH/2
-	StartY    = GetSystemMetrics(1)/2 - HEIGHT/2
+	// StartX    = GetSystemMetrics(0)/2 - WIDTH/2 // windows
+	// StartY    = GetSystemMetrics(1)/2 - HEIGHT/2 // windows
 )
-
-func GetSystemMetrics(nIndex int) int {
-	ret, _, _ := syscall.NewLazyDLL(`User32.dll`).NewProc(`GetSystemMetrics`).Call(uintptr(nIndex))
-	return int(ret)
-}
 
 func ParseHeight(row int) int {
 	if row == 1 {
@@ -447,8 +453,8 @@ func (m *MainForm) Add(w *fltk.Window) func() {
 		if Row == maxRow {
 			m.AddRow.Deactivate()
 		}
-		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row-1; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -466,8 +472,8 @@ func (m *MainForm) Remove(w *fltk.Window) func() {
 		if Row == 1 {
 			m.RmRow.Deactivate()
 		}
-		HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
+		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -546,7 +552,8 @@ func NewMainForm(w *fltk.Window) {
 
 func main() {
 	fltk.InitStyles()
-	win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具")
+	// win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具") // windows
+	win := fltk.NewWindowWithPosition(450, 450, WIDTH, HEIGHT, "寄存器工具")
 	win.SetColor(fltk.WHITE)
 	NewMainForm(win)
 	win.End()
