@@ -55,9 +55,8 @@ func (b *Bit) Click(e fltk.Event) bool {
 		str := textMap[val]
 		b.SetLabel(str)
 		b.SetColor(bitColorMap[str])
-		return true
 	}
-	return false
+	return true
 }
 
 func NewBit(x, y, w, h int) *Bit {
@@ -265,9 +264,8 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 			b.UpdateBit(num)
 			fn()
 			b.Display()
-			return true
 		}
-		return false
+		return true
 	}
 }
 
@@ -280,9 +278,8 @@ func (b *BitRow) ShiftNumEvent(e fltk.Event) bool {
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
 		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
-		return true
 	}
-	return false
+	return true
 }
 
 func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bool {
@@ -292,9 +289,8 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 			fnc()
 			b.UpdateNum()
 			b.Display()
-			return true
 		}
-		return false
+		return true
 	}
 }
 
@@ -304,9 +300,8 @@ func (b *BitRow) DisplayClick(e fltk.Event) bool {
 		b.ShiftNum.SetValue("")
 		b.ShiftNum.Show()
 		b.ShiftNum.TakeFocus()
-		return true
 	}
-	return false
+	return true
 }
 
 func (b *BitRow) Display() {
@@ -358,11 +353,11 @@ func NewBitRow(row int, fn func()) *BitRow {
 	num.SetEventHandler(bitRow.KeyTyped(fn))
 	bitRow.Num = num
 	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
-	lShift.SetBox(fltk.BORDER_BOX)
+	lShift.SetBox(fltk.GLEAM_UP_BOX)
 	lShift.ClearVisibleFocus()
 	lShift.SetLabelSize(12)
 	lShift.SetLabelFont(fltk.HELVETICA)
-	lShift.SetDownBox(fltk.FLAT_BOX)
+	lShift.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	lShift.SetCallback(bitRow.ClickLShift(fn))
 	bitRow.LShift = lShift
 	shiftNum := fltk.NewInput(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
@@ -372,35 +367,35 @@ func NewBitRow(row int, fn func()) *BitRow {
 	shiftNum.Hide()
 	bitRow.ShiftNum = shiftNum
 	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
-	rShift.SetBox(fltk.BORDER_BOX)
+	rShift.SetBox(fltk.GLEAM_UP_BOX)
 	rShift.SetLabelSize(12)
 	rShift.SetLabelFont(fltk.HELVETICA)
-	rShift.SetDownBox(fltk.FLAT_BOX)
+	rShift.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	rShift.ClearVisibleFocus()
 	rShift.SetCallback(bitRow.ClickRShift(fn))
 	bitRow.RShift = rShift
 	reverse := fltk.NewButton(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH, "倒序")
-	reverse.SetBox(fltk.BORDER_BOX)
+	reverse.SetBox(fltk.GLEAM_UP_BOX)
 	reverse.SetLabelSize(12)
 	reverse.SetLabelFont(fltk.HELVETICA)
-	reverse.SetDownBox(fltk.FLAT_BOX)
+	reverse.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	reverse.ClearVisibleFocus()
 	reverse.SetCallback(bitRow.ClickReverse(fn))
 	bitRow.Reverse = reverse
 	invert := fltk.NewButton(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH, "转换")
-	invert.SetBox(fltk.BORDER_BOX)
+	invert.SetBox(fltk.GLEAM_UP_BOX)
 	invert.SetLabelSize(12)
 	invert.SetLabelFont(fltk.HELVETICA)
 	invert.ClearVisibleFocus()
-	invert.SetDownBox(fltk.FLAT_BOX)
+	invert.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	invert.SetCallback(bitRow.ClickInvert(fn))
 	bitRow.Invert = invert
 	clear := fltk.NewButton(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH, "清空")
-	clear.SetBox(fltk.BORDER_BOX)
+	clear.SetBox(fltk.GLEAM_UP_BOX)
 	clear.SetLabelSize(12)
 	clear.SetLabelFont(fltk.HELVETICA)
 	clear.ClearVisibleFocus()
-	clear.SetDownBox(fltk.FLAT_BOX)
+	clear.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	clear.SetCallback(bitRow.ClickClear(fn))
 	bitRow.Clear = clear
 	bitRow.base = 16
@@ -537,23 +532,22 @@ func NewMainForm() {
 	bar := fltk.NewBox(fltk.FLAT_BOX, pad, HEIGHT-bitH-pad*3, WIDTH-pad*2, bitH)
 	bar.SetColor(fltk.LIGHT1)
 	compare := fltk.NewToggleButton(pad*5+150, pad*4, 75, 20, "寄存器对比")
-	compare.SetBox(fltk.THIN_UP_BOX)
+	compare.SetBox(fltk.GLEAM_UP_BOX)
 	compare.SetLabelSize(12)
 	compare.SetLabelFont(fltk.HELVETICA)
 	compare.ClearVisibleFocus()
-	compare.SetDownBox(fltk.THIN_DOWN_BOX)
+	compare.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	compare.SetCallback(mainForm.CompareReg)
 	mainForm.Compare = compare
 	mainForm.Bar = bar
 	mlSwitch := fltk.NewToggleButton(pad*6+225, pad*4, 35, 20, "MSB")
-	mlSwitch.SetBox(fltk.THIN_UP_BOX)
+	mlSwitch.SetBox(fltk.GLEAM_UP_BOX)
 	mlSwitch.SetLabelSize(12)
 	mlSwitch.SetLabelFont(fltk.HELVETICA)
 	mlSwitch.ClearVisibleFocus()
-	mlSwitch.SetDownBox(fltk.THIN_DOWN_BOX)
+	mlSwitch.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	mlSwitch.SetCallback(mainForm.MLSwitch)
 	mainForm.MLSwitchButton = mlSwitch
-
 }
 
 func main() {
