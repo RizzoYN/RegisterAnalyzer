@@ -6,20 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	// "syscall"
-
 	"github.com/pwiecz/go-fltk"
 )
-
-// windows
-// func GetSystemMetrics(nIndex int) int {
-// 	ret, _, _ := syscall.NewLazyDLL(`User32.dll`).NewProc(`GetSystemMetrics`).Call(uintptr(nIndex))
-// 	return int(ret)
-// }
-
-// func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
-// 	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
-// }
 
 var (
 	bitColorMap = map[string]fltk.Color{
@@ -34,6 +22,10 @@ var (
 		"0": "1",
 		"1": "0",
 	}
+	MLmap = map[string]string{
+		"MSB": "LSB",
+		"LSB": "MSB",
+	}
 	pad       = 2
 	bitW      = 18
 	bitH      = 22
@@ -43,8 +35,6 @@ var (
 	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
 	HEIGHT    = bitW + maxRow*bitH + pad*(3+maxRow) + 30
 	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
-	// StartX    = GetSystemMetrics(0)/2 - WIDTH/2 // windows
-	// StartY    = GetSystemMetrics(1)/2 - HEIGHT/2 // windows
 )
 
 func ParseHeight(row int) int {
@@ -426,15 +416,14 @@ func NewBitRow(row int, fn func()) *BitRow {
 }
 
 type MainForm struct {
-	Headers Headers
-	BitRows []*BitRow
-	// AddRow  *fltk.Button
-	// RmRow   *fltk.Button
-	Compare *fltk.ToggleButton
-	Base16  *fltk.RadioRoundButton
-	Base10  *fltk.RadioRoundButton
-	Base8   *fltk.RadioRoundButton
-	Bar     *fltk.Box
+	Headers        Headers
+	BitRows        []*BitRow
+	Compare        *fltk.ToggleButton
+	Base16         *fltk.RadioRoundButton
+	Base10         *fltk.RadioRoundButton
+	Base8          *fltk.RadioRoundButton
+	Bar            *fltk.Box
+	MLSwitchButton *fltk.ToggleButton
 }
 
 func (m *MainForm) Updateheaders() {
@@ -448,16 +437,9 @@ func (m *MainForm) Updateheaders() {
 	}
 }
 
-//func (m *MainForm) Add(w *fltk.Window) func() {
 func (m *MainForm) Add() func() {
 	return func() {
 		Row++
-		// m.RmRow.Activate()
-		// if Row == maxRow {
-		// 	m.AddRow.Deactivate()
-		// }
-		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row-1; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -469,16 +451,9 @@ func (m *MainForm) Add() func() {
 	}
 }
 
-// func (m *MainForm) Remove(w *fltk.Window) func() {
 func (m *MainForm) Remove() func() {
 	return func() {
 		Row--
-		// m.AddRow.Activate()
-		// if Row == 1 {
-		// 	m.RmRow.Deactivate()
-		// }
-		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
 		for r := 0; r < Row; r++ {
 			m.BitRows[r].ShiftNum.Hide()
 			m.BitRows[r].ShiftNumDisplay.Show()
@@ -505,6 +480,20 @@ func (m *MainForm) BaseChoise(base int) func() {
 	}
 }
 
+func (m *MainForm) MLSwitch() {
+	t := m.MLSwitchButton.Label()
+	for c := 0; c < dataWidth; c++ {
+		var label string
+		if t == "LSB" {
+			label = fmt.Sprint(dataWidth - 1 - c)
+		} else {
+			label = fmt.Sprint(c)
+		}
+		m.Headers[c].SetLabel(label)
+	}
+	m.MLSwitchButton.SetLabel(MLmap[t])
+}
+
 func (m *MainForm) CompareReg() {
 	if Row == 1 {
 		m.Add()()
@@ -513,7 +502,6 @@ func (m *MainForm) CompareReg() {
 	}
 }
 
-// func NewMainForm(w *fltk.Window) {
 func NewMainForm() {
 	mainForm := new(MainForm)
 	bitRows := make([]*BitRow, maxRow)
@@ -546,22 +534,7 @@ func NewMainForm() {
 	base8.ClearVisibleFocus()
 	base8.SetCallback(mainForm.BaseChoise(8))
 	mainForm.Base8 = base8
-	// addR := fltk.NewButton(pad*5+150, pad*4, 60, 20, "增加一行")
-	// addR.SetBox(fltk.BORDER_BOX)
-	// addR.SetLabelSize(12)
-	// addR.SetLabelFont(fltk.HELVETICA)
-	// addR.ClearVisibleFocus()
-	// addR.SetDownBox(fltk.FLAT_BOX)
-	// addR.SetCallback(mainForm.Add())
-	// rmR := fltk.NewButton(pad*6+210, pad*4, 60, 20, "删除一行")
-	// rmR.SetBox(fltk.BORDER_BOX)
-	// rmR.SetLabelSize(12)
-	// rmR.SetLabelFont(fltk.HELVETICA)
-	// rmR.ClearVisibleFocus()
-	// rmR.SetDownBox(fltk.FLAT_BOX)
-	// rmR.Deactivate()
-	// rmR.SetCallback(mainForm.Remove())
-	bar := fltk.NewBox(fltk.FLAT_BOX, pad,HEIGHT-bitH-pad*3, WIDTH-pad*2, bitH)
+	bar := fltk.NewBox(fltk.FLAT_BOX, pad, HEIGHT-bitH-pad*3, WIDTH-pad*2, bitH)
 	bar.SetColor(fltk.LIGHT1)
 	compare := fltk.NewToggleButton(pad*5+150, pad*4, 75, 20, "寄存器对比")
 	compare.SetBox(fltk.THIN_UP_BOX)
@@ -570,15 +543,21 @@ func NewMainForm() {
 	compare.ClearVisibleFocus()
 	compare.SetDownBox(fltk.THIN_DOWN_BOX)
 	compare.SetCallback(mainForm.CompareReg)
-	// mainForm.AddRow = addR
-	// mainForm.RmRow = rmR
 	mainForm.Compare = compare
 	mainForm.Bar = bar
+	mlSwitch := fltk.NewToggleButton(pad*6+225, pad*4, 35, 20, "MSB")
+	mlSwitch.SetBox(fltk.THIN_UP_BOX)
+	mlSwitch.SetLabelSize(12)
+	mlSwitch.SetLabelFont(fltk.HELVETICA)
+	mlSwitch.ClearVisibleFocus()
+	mlSwitch.SetDownBox(fltk.THIN_DOWN_BOX)
+	mlSwitch.SetCallback(mainForm.MLSwitch)
+	mainForm.MLSwitchButton = mlSwitch
+
 }
 
 func main() {
 	fltk.InitStyles()
-	// win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具") // windows
 	win := fltk.NewWindowWithPosition(450, 450, WIDTH, HEIGHT, "寄存器工具")
 	win.SetColor(fltk.WHITE)
 	NewMainForm()
