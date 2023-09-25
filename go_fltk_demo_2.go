@@ -55,8 +55,9 @@ func (b *Bit) Click(e fltk.Event) bool {
 		str := textMap[val]
 		b.SetLabel(str)
 		b.SetColor(bitColorMap[str])
+		return true
 	}
-	return true
+	return false
 }
 
 func NewBit(x, y, w, h int) *Bit {
@@ -264,8 +265,9 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 			b.UpdateBit(num)
 			fn()
 			b.Display()
+			return true
 		}
-		return true
+		return false
 	}
 }
 
@@ -278,8 +280,9 @@ func (b *BitRow) ShiftNumEvent(e fltk.Event) bool {
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
 		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
+		return true
 	}
-	return true
+	return false
 }
 
 func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bool {
@@ -289,8 +292,9 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 			fnc()
 			b.UpdateNum()
 			b.Display()
+			return true
 		}
-		return true
+		return false
 	}
 }
 
@@ -300,8 +304,9 @@ func (b *BitRow) DisplayClick(e fltk.Event) bool {
 		b.ShiftNum.SetValue("")
 		b.ShiftNum.Show()
 		b.ShiftNum.TakeFocus()
+		return true
 	}
-	return true
+	return false
 }
 
 func (b *BitRow) Display() {
