@@ -535,8 +535,6 @@ func NewMainForm() {
 	base8.ClearVisibleFocus()
 	base8.SetCallback(mainForm.BaseChoise(8))
 	mainForm.Base8 = base8
-	bar := fltk.NewBox(fltk.FLAT_BOX, pad, HEIGHT-bitH-pad*3, WIDTH-pad*2, bitH)
-	bar.SetColor(fltk.LIGHT1)
 	compare := fltk.NewToggleButton(pad*5+150, pad*4, 75, 20, "寄存器对比")
 	compare.SetBox(fltk.GLEAM_UP_BOX)
 	compare.SetLabelSize(12)
@@ -544,6 +542,19 @@ func NewMainForm() {
 	compare.ClearVisibleFocus()
 	compare.SetDownBox(fltk.GLEAM_DOWN_BOX)
 	compare.SetCallback(mainForm.CompareReg)
+	bar := fltk.NewBox(fltk.FLAT_BOX, pad, HEIGHT-bitH-pad*3, WIDTH-pad*2, bitH, "增加对比")
+	bar.SetColor(fltk.LIGHT1)
+	bar.SetLabelSize(12)
+	bar.SetLabelFont(fltk.HELVETICA)
+	bar.ClearVisibleFocus()
+	bar.SetEventHandler(func(e fltk.Event) bool {
+		if e == fltk.Event(fltk.LeftMouse) {
+			compare.SetValue(true)
+			mainForm.CompareReg()
+			return true
+		}
+		return false
+	})
 	mainForm.Compare = compare
 	mainForm.Bar = bar
 	mlSwitch := fltk.NewToggleButton(pad*6+225, pad*4, 35, 20, "MSB")
