@@ -276,7 +276,6 @@ func (b *BitRow) ShiftNumEvent(e fltk.Event) bool {
 		b.ShiftNumDisplay.Show()
 		b.ShiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
 		b.ShiftNum.Hide()
-		b.ShiftNum.ClearVisibleFocus()
 	}
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
