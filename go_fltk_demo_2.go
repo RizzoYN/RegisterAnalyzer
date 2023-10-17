@@ -517,7 +517,7 @@ func NewMainForm() {
 		}
 	}
 	mainForm.BitRows = bitRows
-	box := fltk.NewBox(fltk.BORDER_BOX, pad*5+30, pad*4, 118, 20, "进制")
+	box := fltk.NewBox(fltk.GTK_UP_BOX, pad*5+30, pad*4, 118, 20, "进制")
 	box.SetLabelSize(12)
 	box.SetColor(fltk.WHITE)
 	box.SetAlign(fltk.ALIGN_LEFT)
