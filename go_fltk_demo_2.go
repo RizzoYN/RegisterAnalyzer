@@ -280,6 +280,7 @@ func (b *BitRow) ShiftNumEvent(e fltk.Event) bool {
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
 		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
+		b.Display()
 		return true
 	}
 	return false
@@ -550,7 +551,7 @@ func NewMainForm() {
 		if e == fltk.Event(fltk.LeftMouse) {
 			compare.SetValue(true)
 			mainForm.CompareReg()
-			return true
+			return true                                                                                                                                                                                 
 		}
 		return false
 	})
