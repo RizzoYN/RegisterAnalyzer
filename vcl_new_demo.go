@@ -18,12 +18,12 @@ const (
 	bdH       = 28
 	MaxRow    = 5
 	winX      = int32(dataWidth*bdW) + int32(dataWidth/4) * pad * 2 + 246 + int32(2.5*dataWidth)
-	winY      = 400
 )
 
 var (
 	Row       = 1
 	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
+	winY      = int32(22+(Row+1)*bdH+(Row+1)*pad) 
 	textMap = map[string]string{
 		"0": "1",
 		"1": "0",
@@ -37,7 +37,7 @@ var (
 		12: types.TColor(0x0000ff),
 	}
 	bitColor = map[string]types.TColor{
-		"0": types.TColor(0xf0f0f0),
+		"0": types.TColor(0xffffff),
 		"1": types.TColor(0xffff88),
 	}
 )
@@ -339,19 +339,19 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	f.base = 16
 	addrow := vcl.NewButton(f)
 	addrow.SetParent(f)
-	addrow.SetBounds(winX-pad-60, pad+5, 60, 20)
+	addrow.SetBounds(winX-pad-60, pad+5, 60, 18)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
 	rmrow := vcl.NewButton(f)
 	rmrow.SetParent(f)
-	rmrow.SetBounds(winX-pad-60, pad+25, 60, 20)
+	rmrow.SetBounds(winX-pad-60, pad+25, 60, 18)
 	rmrow.SetEnabled(false)
 	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
 	checkgroup := vcl.NewRadioGroup(f)
 	checkgroup.SetParent(f)
 	checkgroup.SetCaption("进制")
-	checkgroup.SetBounds(winX-260, pad, 120, 46)
+	checkgroup.SetBounds(winX-185, pad, 120, 40)
 	checkgroup.SetColumns(3)
 	checkbutton16 := vcl.NewRadioButton(checkgroup)
 	checkbutton16.SetParent(checkgroup)
@@ -369,13 +369,13 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	cb := vcl.NewCheckBox(f)
 	cb.SetParent(f)
 	cb.SetCaption("置顶")
-	cb.SetBounds(winX-pad*5-360-60, 20, 10, 10)
+	cb.SetBounds(winX-233, 16, 10, 10)
 	cb.SetOnClick(f.ClickOnTop)
 	f.OnTop = cb
 	bits := make([]*BitRow, MaxRow)
-	f.Headers = NewHeaders(f, 54)
+	f.Headers = NewHeaders(f, 32)
 	for r := 0; r < MaxRow; r++ {
-		bits[r] = NewBitRow(f, r, int32(90*(r+1)))
+		bits[r] = NewBitRow(f, r, int32(22+(r+1)*bdH+(r+1)*pad))
 		for c := 0; c < dataWidth; c++ {
 			bits[r].BitLocs[c].SetOnClick(f.Clicked)
 			}
@@ -502,13 +502,15 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 
 func (f *TMainForm) AddR(sender vcl.IObject) {
 	Row++
+	f.BitRows[Row-1].base = f.base
 	f.RmRow.SetEnabled(true)
 	if Row == MaxRow {
 		f.AddRow.SetEnabled(false)
 	}
-	// winY = int32(bitBgY*(Row+1)+pady*2) + 50
+	winY = int32(22+(Row+1)*bdH+(Row+1)*pad) 
 	f.SetHeight(winY)
 	f.BitRows[Row-1].SetEnable(true)
+	f.BitRows[Row-1].UpdateNum()
 	f.UpdateHeaders()
 }
 
@@ -518,12 +520,11 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	if Row == 1 {
 		f.RmRow.SetEnabled(false)
 	}
-	// winY = int32(bitBgY*(Row+1)+pady*2) + 50
+	winY = int32(22+(Row+1)*bdH+(Row+1)*pad) 
 	f.SetHeight(winY)
 	f.BitRows[Row].SetEnable(false)
-	f.BitRows[Row].base = f.base
 	f.UpdateHeaders()
-	f.BitRows[Row].UpdateNum()
+	
 }
 
 func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
