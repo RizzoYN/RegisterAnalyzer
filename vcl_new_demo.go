@@ -76,6 +76,7 @@ func NewBit(parent vcl.IWinControl, x, y, w, h int32, s, name string) *Bit {
 	bit.SetBorderStyle(types.BsSingle)
 	bit.SetTextBuf(s)
 	bit.Font().SetSize(12)
+	bit.SetColor(bitColor["0"])
 	bit.SetName(name)
 	return &Bit{bit}
 }
@@ -332,6 +333,7 @@ func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 	f.SetCaption("寄存器工具")
 	f.SetClientHeight(winY)
 	f.SetClientWidth(winX)
+	f.SetColor(bitColor["0"])
 	f.initComponents(dataWidth, Row)
 }
 
@@ -339,19 +341,19 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	f.base = 16
 	addrow := vcl.NewButton(f)
 	addrow.SetParent(f)
-	addrow.SetBounds(winX-pad-60, pad+5, 60, 18)
+	addrow.SetBounds(winX-pad-70, pad+5, 60, 18)
 	addrow.SetTextBuf("增加一行")
 	addrow.SetOnClick(f.AddR)
 	rmrow := vcl.NewButton(f)
 	rmrow.SetParent(f)
-	rmrow.SetBounds(winX-pad-60, pad+25, 60, 18)
+	rmrow.SetBounds(winX-pad-70, pad+25, 60, 18)
 	rmrow.SetEnabled(false)
 	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
 	checkgroup := vcl.NewRadioGroup(f)
 	checkgroup.SetParent(f)
 	checkgroup.SetCaption("进制")
-	checkgroup.SetBounds(winX-185, pad, 120, 40)
+	checkgroup.SetBounds(winX-195, pad, 120, 40)
 	checkgroup.SetColumns(3)
 	checkbutton16 := vcl.NewRadioButton(checkgroup)
 	checkbutton16.SetParent(checkgroup)
@@ -369,7 +371,7 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	cb := vcl.NewCheckBox(f)
 	cb.SetParent(f)
 	cb.SetCaption("置顶")
-	cb.SetBounds(winX-233, 16, 10, 10)
+	cb.SetBounds(winX-243, 16, 10, 10)
 	cb.SetOnClick(f.ClickOnTop)
 	f.OnTop = cb
 	bits := make([]*BitRow, MaxRow)
