@@ -325,6 +325,7 @@ type TMainForm struct {
 	RmRow        *vcl.TButton
 	HeaderSwitch *vcl.TButton
 	OnTop        *vcl.TCheckBox
+	ColorSetting *vcl.TColorButton
 }
 
 var mainForm *TMainForm
@@ -385,7 +386,7 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	f.OnTop = cb
 	hSwitch := vcl.NewButton(f)
 	hSwitch.SetParent(f)
-	hSwitch.SetBounds(16, pad*3, 60, 18)
+	hSwitch.SetBounds(16, pad*2, 60, 22)
 	hSwitch.SetTextBuf("MSB")
 	hSwitch.SetOnClick(f.MLSwitch)
 	f.HeaderSwitch = hSwitch
@@ -394,7 +395,7 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	for r := 0; r < MaxRow; r++ {
 		bits[r] = NewBitRow(f, r, int32(22+(r+1)*bdH+(r+1)*pad))
 		for c := 0; c < dataWidth; c++ {
-			bits[r].BitLocs[c].SetOnClick(f.Clicked)
+			bits[r].BitLocs[c].SetOnMouseDown(f.Clicked)
 		}
 		bits[r].Num.SetOnKeyUp(f.KeyTyped)
 		bits[r].LShift.SetOnClick(f.ClickLShift)
@@ -410,6 +411,13 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	f.BaseChoise = checkgroup
 	f.AddRow = addrow
 	f.RmRow = rmrow
+	colorSetting := vcl.NewColorButton(f)
+	colorSetting.SetParent(f)
+	colorSetting.SetBounds(80, pad*2, 75, 22)
+	colorSetting.SetTextBuf("颜色设置")
+	colorSetting.SetOnColorChanged(f.SelectColor)
+	colorSetting.SetButtonColor(bitColor["1"])
+	f.ColorSetting = colorSetting
 }
 
 func (f *TMainForm) UpdateHeader(bitMap map[string]int, c int) {
@@ -440,7 +448,7 @@ func (f *TMainForm) KeyTyped(sender vcl.IObject, key *types.Char, shift types.TS
 	f.UpdateHeaders()
 }
 
-func (f *TMainForm) Clicked(sender vcl.IObject) {
+func (f *TMainForm) Clicked(sender vcl.IObject, button types.TMouseButton, shift types.TShiftState, x, y int32) {
 	bit := vcl.AsPanel(sender)
 	colIx := GetColIndex(bit)
 	rowIx := GetRowIndex(bit)
@@ -564,5 +572,14 @@ func (f *TMainForm) MLSwitch(sender vcl.IObject) {
 			label = fmt.Sprint(c)
 		}
 		f.Headers[c].label.SetCaption(label)
+	}
+}
+
+func (f *TMainForm) SelectColor(sender vcl.IObject) {
+	colorButtom := vcl.AsColorButton(sender)
+	bitColor["1"] = colorButtom.ButtonColor()
+	for r := 0; r < MaxRow; r++ {
+		num, _ := f.BitRows[r].GetCurrentNum()
+		f.BitRows[r].UpdateBitNum(num)
 	}
 }
