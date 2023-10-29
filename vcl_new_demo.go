@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
@@ -17,13 +17,13 @@ const (
 	bdW       = 22
 	bdH       = 28
 	MaxRow    = 5
-	winX      = int32(dataWidth*bdW) + int32(dataWidth/4) * pad * 2 + 246 + int32(2.5*dataWidth)
+	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 246 + int32(2.5*dataWidth)
 )
 
 var (
-	Row       = 1
-	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
-	winY      = int32(22+(Row+1)*bdH+(Row+1)*pad) 
+	Row     = 1
+	MaxNum  = int64(math.Pow(2, float64(dataWidth)) - 1)
+	winY    = int32(22 + (Row+1)*bdH + (Row+1)*pad)
 	textMap = map[string]string{
 		"0": "1",
 		"1": "0",
@@ -182,7 +182,11 @@ func (b *BitRow) SetEnable(show bool) {
 		tmp := obj
 		go func(j *Bit) {
 			vcl.ThreadSync(func() {
-				if show{j.Show()} else {j.Hide()}
+				if show {
+					j.Show()
+				} else {
+					j.Hide()
+				}
 			})
 		}(tmp)
 	}
@@ -190,7 +194,11 @@ func (b *BitRow) SetEnable(show bool) {
 		tmp := ic
 		go func(j vcl.IWinControl) {
 			vcl.ThreadSync(func() {
-				if show{j.Show()} else {j.Hide()}
+				if show {
+					j.Show()
+				} else {
+					j.Hide()
+				}
 			})
 		}(tmp)
 	}
@@ -200,7 +208,7 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	bitRow := new(BitRow)
 	bitLocs := make([]*Bit, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		n := int32(c*bdW) + int32(c/4) * pad * 2 + 4
+		n := int32(c*bdW) + int32(c/4)*pad*2 + 4
 		if n == 1 {
 			n = 4
 		}
@@ -208,11 +216,11 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 		bitLocs[c] = bit
 
 	}
-	bitsWidth := int32(dataWidth*bdW) + int32(dataWidth/4) * pad * 2 + 4
+	bitsWidth := int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 4
 	bitRow.BitLocs = bitLocs
 	num := vcl.NewMemo(parent)
 	num.SetParent(parent)
-	num.SetBounds(bitsWidth+4 , y, int32(2.5*dataWidth)+40, bdH)
+	num.SetBounds(bitsWidth+4, y, int32(2.5*dataWidth)+40, bdH)
 	num.SetTextBuf("0")
 	num.Font().SetSize(12)
 	num.SetName(fmt.Sprintf("numEdit%d", row))
@@ -297,7 +305,7 @@ func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 	headers := make([]*Header, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		n := int32(c*bdW) + int32(c/4) * pad * 2 + 4
+		n := int32(c*bdW) + int32(c/4)*pad*2 + 4
 		if n == 1 {
 			n = 4
 		}
@@ -309,13 +317,14 @@ func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 
 type TMainForm struct {
 	*vcl.TForm
-	Headers    Headers
-	BitRows    []*BitRow
-	BaseChoise *vcl.TRadioGroup
-	base       int
-	AddRow     *vcl.TButton
-	RmRow      *vcl.TButton
-	OnTop      *vcl.TCheckBox
+	Headers      Headers
+	BitRows      []*BitRow
+	BaseChoise   *vcl.TRadioGroup
+	base         int
+	AddRow       *vcl.TButton
+	RmRow        *vcl.TButton
+	HeaderSwitch *vcl.TButton
+	OnTop        *vcl.TCheckBox
 }
 
 var mainForm *TMainForm
@@ -374,20 +383,26 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	cb.SetBounds(winX-243, 16, 10, 10)
 	cb.SetOnClick(f.ClickOnTop)
 	f.OnTop = cb
+	hSwitch := vcl.NewButton(f)
+	hSwitch.SetParent(f)
+	hSwitch.SetBounds(16, pad*3, 60, 18)
+	hSwitch.SetTextBuf("MSB")
+	hSwitch.SetOnClick(f.MLSwitch)
+	f.HeaderSwitch = hSwitch
 	bits := make([]*BitRow, MaxRow)
 	f.Headers = NewHeaders(f, 32)
 	for r := 0; r < MaxRow; r++ {
 		bits[r] = NewBitRow(f, r, int32(22+(r+1)*bdH+(r+1)*pad))
 		for c := 0; c < dataWidth; c++ {
 			bits[r].BitLocs[c].SetOnClick(f.Clicked)
-			}
+		}
 		bits[r].Num.SetOnKeyUp(f.KeyTyped)
 		bits[r].LShift.SetOnClick(f.ClickLShift)
 		bits[r].RShift.SetOnClick(f.ClickRShift)
-		bits[r].Reverse.SetOnClick(f.ClickReverse)   
+		bits[r].Reverse.SetOnClick(f.ClickReverse)
 		bits[r].Invert.SetOnClick(f.ClickInvert)
-		bits[r].Clear.SetOnClick(f.ClickClear)	
-		if r > Row - 1 {
+		bits[r].Clear.SetOnClick(f.ClickClear)
+		if r > Row-1 {
 			bits[r].SetEnable(false)
 		}
 	}
@@ -433,7 +448,6 @@ func (f *TMainForm) Clicked(sender vcl.IObject) {
 	f.BitRows[rowIx].UpdateNum()
 	f.UpdateHeaders()
 }
-
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	button := vcl.AsButton(sender)
@@ -509,7 +523,7 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 	if Row == MaxRow {
 		f.AddRow.SetEnabled(false)
 	}
-	winY = int32(22+(Row+1)*bdH+(Row+1)*pad) 
+	winY = int32(22 + (Row+1)*bdH + (Row+1)*pad)
 	f.SetHeight(winY)
 	f.BitRows[Row-1].SetEnable(true)
 	f.BitRows[Row-1].UpdateNum()
@@ -522,11 +536,11 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	if Row == 1 {
 		f.RmRow.SetEnabled(false)
 	}
-	winY = int32(22+(Row+1)*bdH+(Row+1)*pad) 
+	winY = int32(22 + (Row+1)*bdH + (Row+1)*pad)
 	f.SetHeight(winY)
 	f.BitRows[Row].SetEnable(false)
 	f.UpdateHeaders()
-	
+
 }
 
 func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
@@ -535,5 +549,20 @@ func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
 		f.SetFormStyle(types.FsSystemStayOnTop)
 	} else {
 		f.SetFormStyle(types.FsNormal)
+	}
+}
+
+func (f *TMainForm) MLSwitch(sender vcl.IObject) {
+	button := vcl.AsButton(sender)
+	val := button.Caption()
+	button.SetCaption(MLmap[val])
+	for c := 0; c < dataWidth; c++ {
+		var label string
+		if val == "LSB" {
+			label = fmt.Sprint(dataWidth - 1 - c)
+		} else {
+			label = fmt.Sprint(c)
+		}
+		f.Headers[c].label.SetCaption(label)
 	}
 }
