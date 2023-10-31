@@ -554,6 +554,7 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	}
 	winY = int32(22 + (Row+1)*bdH + (Row+1)*pad)
 	f.SetHeight(winY)
+	f.ClickClear(f.BitRows[Row].Clear)
 	f.BitRows[Row].SetEnable(false)
 	f.UpdateHeaders()
 
