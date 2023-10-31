@@ -317,15 +317,16 @@ func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 
 type TMainForm struct {
 	*vcl.TForm
-	Headers      Headers
-	BitRows      []*BitRow
-	BaseChoise   *vcl.TRadioGroup
-	base         int
-	AddRow       *vcl.TButton
-	RmRow        *vcl.TButton
-	HeaderSwitch *vcl.TButton
-	OnTop        *vcl.TCheckBox
-	ColorSetting *vcl.TColorButton
+	Headers            Headers
+	BitRows            []*BitRow
+	BaseChoise         *vcl.TRadioGroup
+	base               int
+	AddRow             *vcl.TButton
+	RmRow              *vcl.TButton
+	HeaderSwitch       *vcl.TButton
+	OnTop              *vcl.TCheckBox
+	ColorSetting       *vcl.TColorButton
+	HeaderColorSetting *vcl.TColorButton
 }
 
 var mainForm *TMainForm
@@ -414,10 +415,17 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	colorSetting := vcl.NewColorButton(f)
 	colorSetting.SetParent(f)
 	colorSetting.SetBounds(80, pad*2, 75, 22)
-	colorSetting.SetTextBuf("颜色设置")
+	colorSetting.SetTextBuf("颜色选择")
 	colorSetting.SetOnColorChanged(f.SelectColor)
 	colorSetting.SetButtonColor(bitColor["1"])
+	headColorSetting := vcl.NewColorButton(f)
+	headColorSetting.SetParent(f)
+	headColorSetting.SetBounds(158, pad*2, 99, 22)
+	headColorSetting.SetTextBuf("对比颜色选择")
+	headColorSetting.SetOnColorChanged(f.SelectHeaderColor)
+	headColorSetting.SetButtonColor(headerColor[12])
 	f.ColorSetting = colorSetting
+	f.HeaderColorSetting = headColorSetting
 }
 
 func (f *TMainForm) UpdateHeader(bitMap map[string]int, c int) {
@@ -582,4 +590,10 @@ func (f *TMainForm) SelectColor(sender vcl.IObject) {
 		num, _ := f.BitRows[r].GetCurrentNum()
 		f.BitRows[r].UpdateBitNum(num)
 	}
+}
+
+func (f *TMainForm) SelectHeaderColor(sender vcl.IObject) {
+	colorButtom := vcl.AsColorButton(sender)
+	headerColor[12] = colorButtom.ButtonColor()
+	f.UpdateHeaders()
 }
