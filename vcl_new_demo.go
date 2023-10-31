@@ -17,7 +17,7 @@ const (
 	bdW       = 22
 	bdH       = 28
 	MaxRow    = 5
-	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 246 + int32(2.5*dataWidth)
+	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 243 + int32(2.5*dataWidth)
 )
 
 var (
