@@ -344,7 +344,7 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 		var title string
 		if c == 0 {
 			title = "\tBit位域"
-			memo.SetHint("eg. 多个域段 31: 0\n     单个域段 31")
+			memo.SetHint("e.g. 多个域段 31: 0\n      单个域段 31")
 			memo.SetShowHint(true)
 		} else {
 			title = fmt.Sprintf("\t第%d行", c)
