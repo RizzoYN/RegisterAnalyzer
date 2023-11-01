@@ -42,6 +42,14 @@ var (
 	}
 )
 
+func NewButton(parent vcl.IWinControl, x, y, w, h int32, caption string) *vcl.TButton {
+	button := vcl.NewButton(parent)
+	button.SetParent(parent)
+	button.SetBounds(x, y, w, h)
+	button.SetCaption(caption)
+	return button
+}
+
 func GetRowIndex(sender vcl.IWinControl) int64 {
 	cname := sender.Name()
 	name := string(cname[len(cname)-1])
@@ -116,11 +124,15 @@ func (b *BitRow) SetNum(num int64) {
 	}
 }
 
-func (b *BitRow) UpdateNum() {
+func (b *BitRow) GetNum() int64 {
 	bitList := b.GetBitString()
 	binStr := strings.Join(bitList, "")
 	bin, _ := strconv.ParseInt(binStr, 2, dataWidth*2)
-	b.SetNum(bin)
+	return bin
+}
+
+func (b *BitRow) UpdateNum() {
+	b.SetNum(b.GetNum())
 }
 
 func (b *BitRow) GetCurrentNum() (int64, int64) {
@@ -225,10 +237,7 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	num.Font().SetSize(12)
 	num.SetName(fmt.Sprintf("numEdit%d", row))
 	bitRow.Num = num
-	lShift := vcl.NewButton(parent)
-	lShift.SetParent(parent)
-	lShift.SetCaption("<<")
-	lShift.SetBounds(bitsWidth+46+int32(2.5*dataWidth), y, 30, bdH)
+	lShift := NewButton(parent, bitsWidth+46+int32(2.5*dataWidth), y, 30, bdH, "<<")
 	lShift.SetControlStyle(types.BsNew)
 	lShift.SetName(fmt.Sprintf("lshift%d", row))
 	bitRow.LShift = lShift
@@ -239,28 +248,16 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	shiftNum.SetAlignment(types.TaCenter)
 	shiftNum.Font().SetSize(12)
 	bitRow.ShiftNum = shiftNum
-	rShift := vcl.NewButton(parent)
-	rShift.SetParent(parent)
-	rShift.SetBounds(bitsWidth+110+int32(2.5*dataWidth), y, 30, bdH)
-	rShift.SetCaption(">>")
+	rShift := NewButton(parent, bitsWidth+110+int32(2.5*dataWidth), y, 30, bdH, ">>")
 	rShift.SetName(fmt.Sprintf("rshift%d", row))
 	bitRow.RShift = rShift
-	reverse := vcl.NewButton(parent)
-	reverse.SetParent(parent)
-	reverse.SetBounds(bitsWidth+142+int32(2.5*dataWidth), y, 30, bdH)
-	reverse.SetCaption("倒序")
+	reverse := NewButton(parent, bitsWidth+142+int32(2.5*dataWidth), y, 30, bdH, "倒序")
 	reverse.SetName(fmt.Sprintf("reverse%d", row))
 	bitRow.Reverse = reverse
-	invert := vcl.NewButton(parent)
-	invert.SetParent(parent)
-	invert.SetBounds(bitsWidth+174+int32(2.5*dataWidth), y, 30, bdH)
-	invert.SetCaption("转换")
+	invert := NewButton(parent, bitsWidth+174+int32(2.5*dataWidth), y, 30, bdH, "转换")
 	invert.SetName(fmt.Sprintf("invert%d", row))
 	bitRow.Invert = invert
-	clear := vcl.NewButton(parent)
-	clear.SetParent(parent)
-	clear.SetBounds(bitsWidth+206+int32(2.5*dataWidth), y, 30, bdH)
-	clear.SetCaption("清空")
+	clear := NewButton(parent, bitsWidth+206+int32(2.5*dataWidth), y, 30, bdH, "清空")
 	clear.SetName(fmt.Sprintf("clear%d", row))
 	bitRow.Clear = clear
 	bitRow.base = 16
@@ -315,6 +312,55 @@ func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 	return headers
 }
 
+type BitAnalyze struct {
+	frame  *vcl.TFrame
+	labels []*vcl.TLabel
+	res    []*vcl.TMemo
+}
+
+func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
+	width := (winX-pad*2)/(MaxRow+1) - 3
+	bitAnalyze := new(BitAnalyze)
+	frame := vcl.NewFrame(parent)
+	frame.SetParent(parent)
+	frame.SetWidth(winX - pad)
+	frame.SetHeight(bdH*2 - pad)
+	res := make([]*vcl.TMemo, MaxRow+1)
+	labels := make([]*vcl.TLabel, MaxRow+1)
+	for c := 0; c <= MaxRow; c++ {
+		memo := vcl.NewMemo(frame)
+		memo.SetParent(frame)
+		memo.SetBounds(int32(c)*(width+pad)+4, bdH-pad*2, width, bdH)
+		memo.SetMaxLength(256)
+		label := vcl.NewLabel(frame)
+		label.SetParent(frame)
+		label.SetBounds(int32(c)*(width+pad)+4, pad, width, bdH)
+		var title string
+		if c == 0 {
+			title = "\tBit位域"
+			memo.SetHint("eg. 31: 0\n31")
+			memo.SetShowHint(true)
+			memo.SetWordWrap(false)
+			memo.SetWantReturns(false)
+		} else {
+			title = fmt.Sprintf("\t第%d行", c)
+			memo.SetReadOnly(true)
+		}
+		if c > Row {
+			memo.Hide()
+			label.Hide()
+		}
+		label.SetCaption(title)
+		labels[c] = label
+		res[c] = memo
+	}
+	frame.Hide()
+	bitAnalyze.frame = frame
+	bitAnalyze.labels = labels
+	bitAnalyze.res = res
+	return bitAnalyze
+}
+
 type TMainForm struct {
 	*vcl.TForm
 	Headers            Headers
@@ -327,39 +373,16 @@ type TMainForm struct {
 	OnTop              *vcl.TCheckBox
 	ColorSetting       *vcl.TColorButton
 	HeaderColorSetting *vcl.TColorButton
-}
-
-var mainForm *TMainForm
-
-func main() {
-	vcl.Application.Initialize()
-	vcl.Application.SetMainFormOnTaskBar(true)
-	vcl.Application.CreateForm(&mainForm)
-	mainForm.EnabledMaximize(false)
-	mainForm.WorkAreaCenter()
-	vcl.Application.Run()
-}
-
-func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
-	f.SetCaption("寄存器工具")
-	f.SetClientHeight(winY)
-	f.SetClientWidth(winX)
-	f.SetColor(bitColor["0"])
-	f.initComponents(dataWidth, Row)
+	AnalyzeButton      *vcl.TCheckBox
+	AnalyzeArea        *BitAnalyze
 }
 
 func (f *TMainForm) initComponents(cols, rows int) {
 	f.base = 16
-	addrow := vcl.NewButton(f)
-	addrow.SetParent(f)
-	addrow.SetBounds(winX-pad-70, pad+5, 60, 18)
-	addrow.SetTextBuf("增加一行")
+	addrow := NewButton(f, winX-pad-70, pad+5, 60, 18, "增加一行")
 	addrow.SetOnClick(f.AddR)
-	rmrow := vcl.NewButton(f)
-	rmrow.SetParent(f)
-	rmrow.SetBounds(winX-pad-70, pad+25, 60, 18)
+	rmrow := NewButton(f, winX-pad-70, pad+25, 60, 18, "删除一行")
 	rmrow.SetEnabled(false)
-	rmrow.SetTextBuf("删除一行")
 	rmrow.SetOnClick(f.RemoveR)
 	checkgroup := vcl.NewRadioGroup(f)
 	checkgroup.SetParent(f)
@@ -385,10 +408,7 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	cb.SetBounds(winX-243, 16, 10, 10)
 	cb.SetOnClick(f.ClickOnTop)
 	f.OnTop = cb
-	hSwitch := vcl.NewButton(f)
-	hSwitch.SetParent(f)
-	hSwitch.SetBounds(16, pad*2, 60, 22)
-	hSwitch.SetTextBuf("MSB")
+	hSwitch := NewButton(f, 16, pad*2, 60, 22, "MSB")
 	hSwitch.SetOnClick(f.MLSwitch)
 	f.HeaderSwitch = hSwitch
 	bits := make([]*BitRow, MaxRow)
@@ -426,6 +446,15 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	headColorSetting.SetButtonColor(headerColor[12])
 	f.ColorSetting = colorSetting
 	f.HeaderColorSetting = headColorSetting
+	analyzeArea := NewBitAnalyze(f)
+	analyzeArea.res[0].SetOnKeyUp(f.Edit)
+	f.AnalyzeArea = analyzeArea
+	analyzeButton := vcl.NewCheckBox(f)
+	analyzeButton.SetParent(f)
+	analyzeButton.SetBounds(winX/2-35, pad*2, 70, 22)
+	analyzeButton.SetTextBuf("位域解析")
+	analyzeButton.SetOnClick(f.Analyze)
+	f.AnalyzeButton = analyzeButton
 }
 
 func (f *TMainForm) UpdateHeader(bitMap map[string]int, c int) {
@@ -454,6 +483,7 @@ func (f *TMainForm) KeyTyped(sender vcl.IObject, key *types.Char, shift types.TS
 	num, _ := f.BitRows[rowIx].GetCurrentNum()
 	f.BitRows[rowIx].UpdateBit(num)
 	f.UpdateHeaders()
+	f.Edit(f.AnalyzeArea.res[0], key, shift)
 }
 
 func (f *TMainForm) Clicked(sender vcl.IObject, button types.TMouseButton, shift types.TShiftState, x, y int32) {
@@ -463,6 +493,13 @@ func (f *TMainForm) Clicked(sender vcl.IObject, button types.TMouseButton, shift
 	f.BitRows[rowIx].BitLocs[colIx].Clicked(bit)
 	f.BitRows[rowIx].UpdateNum()
 	f.UpdateHeaders()
+	var key uint16 = 0xff
+	f.Edit(f.AnalyzeArea.res[0], &key, shift)
+}
+
+func (f *TMainForm) UpdateAnalyzeArea() {
+	var key uint16 = 0xff
+	f.Edit(f.AnalyzeArea.res[0], &key, 0)
 }
 
 func (f *TMainForm) ClickClear(sender vcl.IObject) {
@@ -470,6 +507,7 @@ func (f *TMainForm) ClickClear(sender vcl.IObject) {
 	rowIx := GetRowIndex(button)
 	f.BitRows[rowIx].UpdateBitNum(0)
 	f.UpdateHeaders()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) ClickInvert(sender vcl.IObject) {
@@ -480,6 +518,7 @@ func (f *TMainForm) ClickInvert(sender vcl.IObject) {
 	}
 	f.BitRows[rowIx].UpdateNum()
 	f.UpdateHeaders()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) ClickLShift(sender vcl.IObject) {
@@ -489,6 +528,7 @@ func (f *TMainForm) ClickLShift(sender vcl.IObject) {
 	num = (num << shiftNum) & MaxNum
 	f.BitRows[rowIx].UpdateBitNum(num)
 	f.UpdateHeaders()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) ClickRShift(sender vcl.IObject) {
@@ -498,6 +538,7 @@ func (f *TMainForm) ClickRShift(sender vcl.IObject) {
 	num = (num >> shiftNum) & MaxNum
 	f.BitRows[rowIx].UpdateBitNum(num)
 	f.UpdateHeaders()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) ClickReverse(sender vcl.IObject) {
@@ -514,6 +555,7 @@ func (f *TMainForm) ClickReverse(sender vcl.IObject) {
 	}
 	f.BitRows[rowIx].UpdateNum()
 	f.UpdateHeaders()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) BaseChange(sender vcl.IObject) {
@@ -530,6 +572,7 @@ func (f *TMainForm) BaseChange(sender vcl.IObject) {
 		num, _ := strconv.ParseInt(bitString, oldbase, dataWidth*2)
 		f.BitRows[i].UpdateBitNum(num)
 	}
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) AddR(sender vcl.IObject) {
@@ -539,11 +582,18 @@ func (f *TMainForm) AddR(sender vcl.IObject) {
 	if Row == MaxRow {
 		f.AddRow.SetEnabled(false)
 	}
-	winY = int32(22 + (Row+1)*bdH + (Row+1)*pad)
+	winY += bdH + pad
 	f.SetHeight(winY)
+	if f.AnalyzeButton.Checked() {
+		f.AnalyzeArea.frame.SetLeft(pad)
+		f.AnalyzeArea.frame.SetTop(int32(22 + (Row+1)*bdH + (Row+1)*pad))
+	}
 	f.BitRows[Row-1].SetEnable(true)
 	f.BitRows[Row-1].UpdateNum()
 	f.UpdateHeaders()
+	f.AnalyzeArea.res[Row].Show()
+	f.AnalyzeArea.labels[Row].Show()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) RemoveR(sender vcl.IObject) {
@@ -552,12 +602,18 @@ func (f *TMainForm) RemoveR(sender vcl.IObject) {
 	if Row == 1 {
 		f.RmRow.SetEnabled(false)
 	}
-	winY = int32(22 + (Row+1)*bdH + (Row+1)*pad)
+	winY -= bdH + pad
 	f.SetHeight(winY)
-	f.ClickClear(f.BitRows[Row].Clear)
+	if f.AnalyzeButton.Checked() {
+		f.AnalyzeArea.frame.SetLeft(pad)
+		f.AnalyzeArea.frame.SetTop(int32(22 + (Row+1)*bdH + (Row+1)*pad))
+	}
+	f.BitRows[Row].Clear.Click()
 	f.BitRows[Row].SetEnable(false)
 	f.UpdateHeaders()
-
+	f.AnalyzeArea.res[Row+1].Hide()
+	f.AnalyzeArea.labels[Row+1].Hide()
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) ClickOnTop(sender vcl.IObject) {
@@ -597,4 +653,126 @@ func (f *TMainForm) SelectHeaderColor(sender vcl.IObject) {
 	colorButtom := vcl.AsColorButton(sender)
 	headerColor[12] = colorButtom.ButtonColor()
 	f.UpdateHeaders()
+}
+
+func (f *TMainForm) Analyze(sender vcl.IObject) {
+	cb := vcl.AsCheckBox(sender)
+	if cb.Checked() {
+		f.AnalyzeArea.frame.SetLeft(pad)
+		f.AnalyzeArea.frame.SetTop(int32(22 + (Row+1)*bdH + (Row+1)*pad))
+		f.AnalyzeArea.frame.Show()
+		winY += bdH*2 - pad
+	} else {
+		f.AnalyzeArea.frame.Hide()
+		winY -= bdH*2 - pad
+	}
+	f.SetClientHeight(winY)
+}
+
+func (f *TMainForm) SetNum(num int64, r int32) {
+	for c := 0; c <= MaxRow; c++ {
+		switch f.base {
+		case 16:
+			f.AnalyzeArea.res[r+1].SetTextBuf(fmt.Sprintf("%x", num))
+		case 10:
+			f.AnalyzeArea.res[r+1].SetTextBuf(fmt.Sprint(num))
+		case 8:
+			f.AnalyzeArea.res[r+1].SetTextBuf(fmt.Sprintf("%o", num))
+		}
+	}
+}
+
+func (f *TMainForm) ParseBitRange(nums []string, r int32) (int64, error) {
+	var res []string
+	if len(nums) == 1 {
+		left := strings.Trim(nums[0], "\r\n")
+		num, err := strconv.ParseInt(left, 10, 0)
+		if err != nil || num >= dataWidth {
+			return 0, fmt.Errorf("无效输入")
+		}
+		for c := 0; c < dataWidth; c++ {
+			var str string
+			if f.Headers[c].label.Caption() == left {
+				f.BitRows[r].BitLocs[c].GetTextBuf(&str, 2)
+				res = append(res, str)
+			}
+		}
+		bin, _ := strconv.ParseInt(strings.Join(res, ""), 2, dataWidth*2)
+		return bin, nil
+	} else if len(nums) == 2 {
+		left := strings.Trim(nums[0], "\r\n")
+		right := strings.Trim(nums[1], "\r\n")
+		numL, errL := strconv.ParseInt(left, 10, 0)
+		if errL != nil || numL >= dataWidth {
+			return 0, fmt.Errorf("无效输入")
+		}
+		numR, errR := strconv.ParseInt(right, 10, 0)
+		if errR != nil || numR >= dataWidth {
+			return 0, fmt.Errorf("无效输入")
+		}
+		if numR == numL {
+			return 0, fmt.Errorf("无效输入")
+		}
+		flag := false
+		for c := 0; c < dataWidth; c++ {
+			var str string
+			cap := f.Headers[c].label.Caption()
+			if (cap == left && !flag) || (cap == right && !flag) {
+				flag = true
+			} else if (cap == right && flag) || (cap == left && flag) {
+				flag = false
+				f.BitRows[r].BitLocs[c].GetTextBuf(&str, 2)
+				res = append(res, str)
+			} else {}
+			if flag {
+				f.BitRows[r].BitLocs[c].GetTextBuf(&str, 2)
+				res = append(res, str)
+			}
+		}
+		bin, _ := strconv.ParseInt(strings.Join(res, ""), 2, dataWidth*2)
+		return bin, nil
+	} else {
+		return 0, fmt.Errorf("无效输入")
+	}
+}
+
+func (f *TMainForm) Edit(sender vcl.IObject, key *types.Char, shift types.TShiftState) {
+
+	edit := vcl.AsMemo(sender)
+	var str string
+	edit.GetTextBuf(&str, 256)
+	for r := 0; r < MaxRow; r++ {
+		num, err := f.ParseBitRange(strings.Split(str, ":"), int32(r))
+		if err != nil {
+			if str != "" {
+				f.AnalyzeArea.res[r+1].SetTextBuf("无效输入")
+				f.AnalyzeArea.res[r+1].SetColor(types.TColor(0x0000ff))
+			} else {
+				f.AnalyzeArea.res[r+1].SetTextBuf("")
+				f.AnalyzeArea.res[r+1].SetColor(types.TColor(0xffffff))
+			}
+		} else {
+			f.SetNum(num, int32(r))
+			f.AnalyzeArea.res[r+1].SetColor(types.TColor(0xffffff))
+		}
+	}
+}
+
+var mainForm *TMainForm
+
+func main() {
+	vcl.Application.Initialize()
+	vcl.Application.SetMainFormOnTaskBar(true)
+	vcl.Application.CreateForm(&mainForm)
+	mainForm.EnabledMaximize(false)
+	mainForm.WorkAreaCenter()
+	vcl.Application.Run()
+}
+
+func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
+	f.SetCaption("寄存器工具")
+	f.SetClientHeight(winY)
+	f.SetClientWidth(winX)
+	f.SetColor(bitColor["0"])
+	f.initComponents(dataWidth, Row)
 }
