@@ -339,7 +339,7 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 		var title string
 		if c == 0 {
 			title = "\tBit位域"
-			memo.SetHint("eg. 31: 0\n31")
+			memo.SetHint("eg. 多个域段 31: 0\n     单个域段 31")
 			memo.SetShowHint(true)
 			memo.SetWordWrap(false)
 			memo.SetWantReturns(false)
