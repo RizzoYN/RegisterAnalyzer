@@ -639,6 +639,7 @@ func (f *TMainForm) MLSwitch(sender vcl.IObject) {
 		}
 		f.Headers[c].label.SetCaption(label)
 	}
+	f.UpdateAnalyzeArea()
 }
 
 func (f *TMainForm) SelectColor(sender vcl.IObject) {
