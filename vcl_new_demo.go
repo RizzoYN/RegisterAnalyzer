@@ -330,12 +330,12 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 	for c := 0; c <= MaxRow; c++ {
 		memo := vcl.NewMemo(frame)
 		memo.SetParent(frame)
-		memo.SetBounds(int32(c)*(width+pad)+4, bdH-pad*2, width, bdH)
+		memo.SetBounds(int32(c)*(width+pad)+3, bdH-pad*2, width, bdH)
 		memo.SetMaxLength(256)
 		memo.Font().SetSize(12)
 		label := vcl.NewLabel(frame)
 		label.SetParent(frame)
-		label.SetBounds(int32(c)*(width+pad)+4, pad, width, bdH)
+		label.SetBounds(int32(c)*(width+pad)+3, pad, width, bdH)
 		var title string
 		if c == 0 {
 			title = "\tBit位域"
