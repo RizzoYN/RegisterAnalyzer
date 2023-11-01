@@ -79,7 +79,9 @@ func (b *Bit) Clicked(sender vcl.IObject) {
 
 func NewBit(parent vcl.IWinControl, x, y, w, h int32, s, name string) *Bit {
 	bit := vcl.NewMemo(parent)
+	menu := vcl.NewPopupMenu(bit)
 	bit.SetParent(parent)
+	bit.SetPopupMenu(menu)
 	bit.SetBounds(x, y, w, h)
 	bit.SetBorderStyle(types.BsSingle)
 	bit.SetTextBuf(s)
@@ -157,6 +159,7 @@ func (b *BitRow) GetCurrentNum() (int64, int64) {
 	} else {
 		b.ShiftNum.SetTextBuf(fmt.Sprint(b.lastShiftNum))
 	}
+	b.Num.SetSelStart(256)
 	return b.lastNum, b.lastShiftNum
 }
 
@@ -493,9 +496,11 @@ func (f *TMainForm) Clicked(sender vcl.IObject, button types.TMouseButton, shift
 	bit := vcl.AsMemo(sender)
 	colIx := GetColIndex(bit)
 	rowIx := GetRowIndex(bit)
+	f.BitRows[rowIx].Num.SetFocus()
 	f.BitRows[rowIx].BitLocs[colIx].Clicked(bit)
 	f.BitRows[rowIx].UpdateNum()
 	f.UpdateHeaders()
+	f.BitRows[rowIx].Num.SetSelStart(256)
 	var key uint16 = 0xff
 	f.Edit(f.AnalyzeArea.res[0], &key, shift)
 }
