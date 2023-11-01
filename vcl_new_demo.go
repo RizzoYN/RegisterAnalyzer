@@ -332,6 +332,7 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 		memo.SetParent(frame)
 		memo.SetBounds(int32(c)*(width+pad)+4, bdH-pad*2, width, bdH)
 		memo.SetMaxLength(256)
+		memo.Font().SetSize(12)
 		label := vcl.NewLabel(frame)
 		label.SetParent(frame)
 		label.SetBounds(int32(c)*(width+pad)+4, pad, width, bdH)
