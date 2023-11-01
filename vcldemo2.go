@@ -17,7 +17,7 @@ const (
 	bdW       = 22
 	bdH       = 28
 	MaxRow    = 5
-	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 340 + int32(2.5*dataWidth)
+	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 339 + int32(2.5*dataWidth)
 )
 
 var (
@@ -222,7 +222,7 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	bitRow := new(BitRow)
 	bitLocs := make([]*Bit, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		n := int32(c*bdW) + int32(c/4)*pad*2 + int32(c+1)*pad + 1
+		n := int32(c*bdW) + int32(c/4)*pad*2 + int32(c+1)*pad
 		if n == 1 {
 			n = 4
 		}
@@ -230,7 +230,7 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 		bitLocs[c] = bit
 
 	}
-	bitsWidth := int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + int32(dataWidth+1)*pad + 1
+	bitsWidth := int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + int32(dataWidth+1)*pad
 	bitRow.BitLocs = bitLocs
 	num := vcl.NewMemo(parent)
 	num.SetParent(parent)
@@ -304,7 +304,7 @@ func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
 func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 	headers := make([]*Header, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		n := int32(c*bdW) + int32(c/4)*pad*2 + int32(c+1)*pad + 1
+		n := int32(c*bdW) + int32(c/4)*pad*2 + int32(c+1)*pad
 		if n == 1 {
 			n = 4
 		}
