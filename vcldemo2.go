@@ -732,7 +732,7 @@ func (f *TMainForm) ParseBitRange(nums []string, r int32) (int64, error) {
 				flag = false
 				f.BitRows[r].BitLocs[c].GetTextBuf(&str, 2)
 				res = append(res, str)
-			} else {}
+			}
 			if flag {
 				f.BitRows[r].BitLocs[c].GetTextBuf(&str, 2)
 				res = append(res, str)
