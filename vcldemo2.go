@@ -320,7 +320,7 @@ func NewHeaders(parent vcl.IWinControl, y int32) Headers {
 type BitAnalyze struct {
 	frame  *vcl.TFrame
 	labels []*vcl.TLabel
-	res    []*vcl.TMemo
+	res    []*vcl.TEdit
 }
 
 func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
@@ -330,10 +330,10 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 	frame.SetParent(parent)
 	frame.SetWidth(winX - pad)
 	frame.SetHeight(bdH*2 - pad)
-	res := make([]*vcl.TMemo, MaxRow+1)
+	res := make([]*vcl.TEdit, MaxRow+1)
 	labels := make([]*vcl.TLabel, MaxRow+1)
 	for c := 0; c <= MaxRow; c++ {
-		memo := vcl.NewMemo(frame)
+		memo := vcl.NewEdit(frame)
 		memo.SetParent(frame)
 		memo.SetBounds(int32(c)*(width+pad)+3, bdH-pad*2, width, bdH)
 		memo.SetMaxLength(256)
@@ -346,8 +346,6 @@ func NewBitAnalyze(parent vcl.IWinControl) *BitAnalyze {
 			title = "\tBit位域"
 			memo.SetHint("eg. 多个域段 31: 0\n     单个域段 31")
 			memo.SetShowHint(true)
-			memo.SetWordWrap(false)
-			memo.SetWantReturns(false)
 		} else {
 			title = fmt.Sprintf("\t第%d行", c)
 			memo.SetReadOnly(true)
