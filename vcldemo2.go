@@ -36,6 +36,10 @@ var (
 		10: types.TColor(0),
 		12: types.TColor(0x0000ff),
 	}
+	headerStyle = map[int32]types.TFontStyles{
+		10: types.FsBold,
+		12: types.FsItalic,
+	}
 	bitColor = map[string]types.TColor{
 		"0": types.TColor(0xffffff),
 		"1": types.TColor(0xffff88),
@@ -278,6 +282,7 @@ type Header struct {
 
 func (h *Header) ChangeLabelColor(size int32) {
 	h.label.Font().SetSize(size)
+	h.label.Font().SetStyle(headerStyle[size])
 	h.label.Font().SetColor(headerColor[size])
 }
 
