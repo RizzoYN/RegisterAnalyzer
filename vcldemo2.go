@@ -17,7 +17,7 @@ const (
 	bdW       = 22
 	bdH       = 28
 	MaxRow    = 5
-	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 339 + int32(2.5*dataWidth)
+	winX      = int32(dataWidth*bdW) + int32(dataWidth/4)*pad*2 + 335 + int32(2.5*dataWidth)
 )
 
 var (
@@ -237,32 +237,32 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	bitRow.BitLocs = bitLocs
 	num := vcl.NewMemo(parent)
 	num.SetParent(parent)
-	num.SetBounds(bitsWidth+4, y, int32(2.5*dataWidth)+40, bdH)
+	num.SetBounds(bitsWidth, y, int32(2.5*dataWidth)+40, bdH)
 	num.SetTextBuf("0")
 	num.Font().SetSize(12)
 	num.SetName(fmt.Sprintf("numEdit%d", row))
 	bitRow.Num = num
-	lShift := NewButton(parent, bitsWidth+46+int32(2.5*dataWidth), y, 30, bdH, "<<")
+	lShift := NewButton(parent, bitsWidth+42+int32(2.5*dataWidth), y, 30, bdH, "<<")
 	lShift.SetControlStyle(types.BsNew)
 	lShift.SetName(fmt.Sprintf("lshift%d", row))
 	bitRow.LShift = lShift
 	shiftNum := vcl.NewMemo(parent)
 	shiftNum.SetParent(parent)
-	shiftNum.SetBounds(bitsWidth+78+int32(2.5*dataWidth), y, 30, bdH)
+	shiftNum.SetBounds(bitsWidth+74+int32(2.5*dataWidth), y, 30, bdH)
 	shiftNum.SetTextBuf("1")
 	shiftNum.SetAlignment(types.TaCenter)
 	shiftNum.Font().SetSize(12)
 	bitRow.ShiftNum = shiftNum
-	rShift := NewButton(parent, bitsWidth+110+int32(2.5*dataWidth), y, 30, bdH, ">>")
+	rShift := NewButton(parent, bitsWidth+106+int32(2.5*dataWidth), y, 30, bdH, ">>")
 	rShift.SetName(fmt.Sprintf("rshift%d", row))
 	bitRow.RShift = rShift
-	reverse := NewButton(parent, bitsWidth+142+int32(2.5*dataWidth), y, 30, bdH, "倒序")
+	reverse := NewButton(parent, bitsWidth+138+int32(2.5*dataWidth), y, 30, bdH, "倒序")
 	reverse.SetName(fmt.Sprintf("reverse%d", row))
 	bitRow.Reverse = reverse
-	invert := NewButton(parent, bitsWidth+174+int32(2.5*dataWidth), y, 30, bdH, "转换")
+	invert := NewButton(parent, bitsWidth+170+int32(2.5*dataWidth), y, 30, bdH, "转换")
 	invert.SetName(fmt.Sprintf("invert%d", row))
 	bitRow.Invert = invert
-	clear := NewButton(parent, bitsWidth+206+int32(2.5*dataWidth), y, 30, bdH, "清空")
+	clear := NewButton(parent, bitsWidth+202+int32(2.5*dataWidth), y, 30, bdH, "清空")
 	clear.SetName(fmt.Sprintf("clear%d", row))
 	bitRow.Clear = clear
 	bitRow.base = 16
