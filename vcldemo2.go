@@ -54,6 +54,25 @@ func NewButton(parent vcl.IWinControl, x, y, w, h int32, caption string) *vcl.TB
 	return button
 }
 
+func NewColorButton(parent vcl.IWinControl, x, y, w, h int32, caption string, fn vcl.TNotifyEvent, color types.TColor) *vcl.TColorButton {
+	button := vcl.NewColorButton(parent)
+	button.SetParent(parent)
+	button.SetBounds(x, y, w, h)
+	button.SetCaption(caption)
+	button.SetOnColorChanged(fn)
+	button.SetButtonColor(color)
+	return button
+}
+
+func NewToggleBox(parent vcl.IWinControl, x, y, w, h int32, caption string, fn vcl.TNotifyEvent) *vcl.TToggleBox {
+	button := vcl.NewToggleBox(parent)
+	button.SetParent(parent)
+	button.SetBounds(x, y, w, h)
+	button.SetCaption(caption)
+	button.SetOnClick(fn)
+	return button
+}
+
 func GetRowIndex(sender vcl.IWinControl) int64 {
 	cname := sender.Name()
 	name := string(cname[len(cname)-1])
@@ -247,7 +266,6 @@ func NewBitRow(parent vcl.IWinControl, row int, y int32) *BitRow {
 	num.SetName(fmt.Sprintf("numEdit%d", row))
 	bitRow.Num = num
 	lShift := NewButton(parent, bitsWidth+42+int32(2.5*dataWidth), y, 30, bdH, "<<")
-	lShift.SetControlStyle(types.BsNew)
 	lShift.SetName(fmt.Sprintf("lshift%d", row))
 	bitRow.LShift = lShift
 	shiftNum := vcl.NewMemo(parent)
@@ -378,7 +396,7 @@ type TMainForm struct {
 	base               int
 	AddRow             *vcl.TButton
 	RmRow              *vcl.TButton
-	HeaderSwitch       *vcl.TButton
+	HeaderSwitch       *vcl.TToggleBox
 	OnTop              *vcl.TCheckBox
 	ColorSetting       *vcl.TColorButton
 	HeaderColorSetting *vcl.TColorButton
@@ -411,14 +429,14 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	checkbutton8.SetParent(checkgroup)
 	checkbutton8.SetCaption("8")
 	checkbutton8.SetOnClick(f.BaseChange)
+	f.BaseChoise = checkgroup
 	cb := vcl.NewCheckBox(f)
 	cb.SetParent(f)
 	cb.SetCaption("置顶")
 	cb.SetBounds(winX-243, 16, 10, 10)
 	cb.SetOnClick(f.ClickOnTop)
 	f.OnTop = cb
-	hSwitch := NewButton(f, 16, pad*2, 60, 22, "MSB")
-	hSwitch.SetOnClick(f.MLSwitch)
+	hSwitch := NewToggleBox(f, 16, pad*2, 60, 22, "MSB", f.MLSwitch)
 	f.HeaderSwitch = hSwitch
 	bits := make([]*BitRow, MaxRow)
 	f.Headers = NewHeaders(f, 32)
@@ -441,28 +459,14 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	f.BaseChoise = checkgroup
 	f.AddRow = addrow
 	f.RmRow = rmrow
-	colorSetting := vcl.NewColorButton(f)
-	colorSetting.SetParent(f)
-	colorSetting.SetBounds(80, pad*2, 75, 22)
-	colorSetting.SetTextBuf("颜色选择")
-	colorSetting.SetOnColorChanged(f.SelectColor)
-	colorSetting.SetButtonColor(bitColor["1"])
-	headColorSetting := vcl.NewColorButton(f)
-	headColorSetting.SetParent(f)
-	headColorSetting.SetBounds(158, pad*2, 99, 22)
-	headColorSetting.SetTextBuf("对比颜色选择")
-	headColorSetting.SetOnColorChanged(f.SelectHeaderColor)
-	headColorSetting.SetButtonColor(headerColor[12])
+	colorSetting := NewColorButton(f, 80, pad*2, 75, 22, "颜色选择", f.SelectColor, bitColor["1"])
+	headColorSetting := NewColorButton(f, 158, pad*2, 99, 22, "对比颜色选择", f.SelectHeaderColor, headerColor[12])
 	f.ColorSetting = colorSetting
 	f.HeaderColorSetting = headColorSetting
 	analyzeArea := NewBitAnalyze(f)
 	analyzeArea.res[0].SetOnKeyUp(f.Edit)
 	f.AnalyzeArea = analyzeArea
-	analyzeButton := vcl.NewToggleBox(f)
-	analyzeButton.SetParent(f)
-	analyzeButton.SetBounds(winX/2-35, pad*2, 70, 22)
-	analyzeButton.SetCaption("位域解析")
-	analyzeButton.SetOnClick(f.Analyze)
+	analyzeButton := NewToggleBox(f, winX/2-35, pad*2, 70, 22, "位域解析", f.Analyze)
 	f.AnalyzeButton = analyzeButton
 }
 
