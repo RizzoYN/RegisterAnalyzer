@@ -73,6 +73,25 @@ func NewToggleBox(parent vcl.IWinControl, x, y, w, h int32, caption string, fn v
 	return button
 }
 
+func NewRadios(parent vcl.IWinControl, fn vcl.TNotifyEvent, x, y, w, h int32) *vcl.TRadioGroup {
+	checkgroup := vcl.NewRadioGroup(parent)
+	checkgroup.SetParent(parent)
+	checkgroup.SetCaption("进制")
+	checkgroup.SetBounds(x, y, w, h)
+	checkgroup.SetColumns(3)
+	caps := []string{"16", "10", "8"}
+	for _, cap := range(caps){
+		button := vcl.NewRadioButton(checkgroup)
+		button.SetParent(checkgroup)
+		button.SetCaption(cap)
+		if cap == "16" {
+			button.SetChecked(true)
+		}
+		button.SetOnClick(fn)
+	}
+	return checkgroup
+}
+
 func GetRowIndex(sender vcl.IWinControl) int64 {
 	cname := sender.Name()
 	name := string(cname[len(cname)-1])
@@ -411,24 +430,7 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	rmrow := NewButton(f, winX-pad-70, pad+25, 60, 18, "删除一行")
 	rmrow.SetEnabled(false)
 	rmrow.SetOnClick(f.RemoveR)
-	checkgroup := vcl.NewRadioGroup(f)
-	checkgroup.SetParent(f)
-	checkgroup.SetCaption("进制")
-	checkgroup.SetBounds(winX-195, pad, 120, 40)
-	checkgroup.SetColumns(3)
-	checkbutton16 := vcl.NewRadioButton(checkgroup)
-	checkbutton16.SetParent(checkgroup)
-	checkbutton16.SetCaption("16")
-	checkbutton16.SetChecked(true)
-	checkbutton16.SetOnClick(f.BaseChange)
-	checkbutton10 := vcl.NewRadioButton(checkgroup)
-	checkbutton10.SetParent(checkgroup)
-	checkbutton10.SetCaption("10")
-	checkbutton10.SetOnClick(f.BaseChange)
-	checkbutton8 := vcl.NewRadioButton(checkgroup)
-	checkbutton8.SetParent(checkgroup)
-	checkbutton8.SetCaption("8")
-	checkbutton8.SetOnClick(f.BaseChange)
+	checkgroup := NewRadios(f, f.BaseChange, winX-195, pad, 120, 40)
 	f.BaseChoise = checkgroup
 	cb := vcl.NewCheckBox(f)
 	cb.SetParent(f)
