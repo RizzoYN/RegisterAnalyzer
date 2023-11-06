@@ -382,7 +382,7 @@ type TMainForm struct {
 	OnTop              *vcl.TCheckBox
 	ColorSetting       *vcl.TColorButton
 	HeaderColorSetting *vcl.TColorButton
-	AnalyzeButton      *vcl.TCheckBox
+	AnalyzeButton      *vcl.TToggleBox
 	AnalyzeArea        *BitAnalyze
 }
 
@@ -458,10 +458,10 @@ func (f *TMainForm) initComponents(cols, rows int) {
 	analyzeArea := NewBitAnalyze(f)
 	analyzeArea.res[0].SetOnKeyUp(f.Edit)
 	f.AnalyzeArea = analyzeArea
-	analyzeButton := vcl.NewCheckBox(f)
+	analyzeButton := vcl.NewToggleBox(f)
 	analyzeButton.SetParent(f)
 	analyzeButton.SetBounds(winX/2-35, pad*2, 70, 22)
-	analyzeButton.SetTextBuf("位域解析")
+	analyzeButton.SetCaption("位域解析")
 	analyzeButton.SetOnClick(f.Analyze)
 	f.AnalyzeButton = analyzeButton
 }
