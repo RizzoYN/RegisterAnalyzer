@@ -206,19 +206,11 @@ func (b *BitRow) GetCurrentNum() (int64, int64) {
 }
 
 func (b *BitRow) UpdateBit(num int64) {
-	binStr := strconv.FormatInt(num, 2)
-	n := len(binStr)
-	sum := 0
-	for c := dataWidth - 1; c >= 0; c-- {
-		if sum < n {
-			s := string(binStr[n-sum-1])
-			b.BitLocs[c].SetTextBuf(s)
-			b.BitLocs[c].SetColor(bitColor[s])
-		} else {
-			b.BitLocs[c].SetTextBuf("0")
-			b.BitLocs[c].SetColor(bitColor["0"])
-		}
-		sum++
+	str := fmt.Sprintf("%0*b", dataWidth, num)
+	for c := 0; c < dataWidth; c++ {
+		s := string(str[c])
+		b.BitLocs[c].SetTextBuf(s)
+		b.BitLocs[c].SetColor(bitColor[s])
 	}
 }
 
