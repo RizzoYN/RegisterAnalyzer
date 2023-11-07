@@ -448,6 +448,19 @@ func NewHeaders() Headers {
 // 	c.Window.Hide()
 // }
 
+// func (c *ColorSelect) Click(e fltk.Event) bool {
+// 	if e == fltk.Event(fltk.LEFT) {
+// 		for _, box := range c.Colors {
+// 			if box.HasFocus() {
+// 				color := box.Color()
+// 				c.CurrentColor = color
+// 			}
+// 		}
+// 		return true
+// 	}
+// 	return false
+// }
+
 // func (c *ColorSelect) Close() {
 // 	c.Window.Hide()
 // }
@@ -455,17 +468,19 @@ func NewHeaders() Headers {
 // func NewColorSelect(b *fltk.Button) *ColorSelect {
 // 	colorSelect := new(ColorSelect)
 // 	colors := make([]*fltk.Box, 10)
-// 	win := fltk.NewWindowWithPosition(205, 100, 200, 200, "颜色选择")
-// 	win.SetColor(fltk.WHITE)
+// 	win := fltk.NewWindowWithPosition(205, 100, 500, 500, "颜色选择")
+// 	win.SetColor(fltk.Color(0x0f0f0f))
+
 // 	for i := 0; i < 10; i++ {
-// 		box := fltk.NewBox(fltk.BORDER_FRAME, pad*(i+1), pad, 20, 20)
-// 		box.SetColor(fltk.Color(0x000080 + i*80))
+// 		box := fltk.NewBox(fltk.BORDER_BOX, pad*(i+1)+i*20, pad, 20, 20)
+// 		box.SetColor(fltk.Color(0x000080 + i*20))
+// 		box.SetEventHandler(colorSelect.Click)
 // 		colors[i] = box
 // 	}
-// 	box := fltk.NewBox(fltk.BORDER_FRAME, pad, 180-pad, 20, 20)
+// 	box := fltk.NewBox(fltk.BORDER_BOX, pad, 180-pad, 20, 20)
 // 	box.SetColor(fltk.BACKGROUND_COLOR)
-// 	comfirm := NewButton(pad*2+20, 100-pad, 60, 20, "选择")
-// 	cancel := NewButton(pad*3+80, 100-pad, 60, 20, "取消")
+// 	comfirm := NewButton(0, 100, 60, 20, "选择")
+// 	cancel := NewButton(65, 100, 60, 20, "取消")
 // 	comfirm.SetCallback(colorSelect.Select)
 // 	cancel.SetCallback(colorSelect.Close)
 // 	colorSelect.CurrentColor = fltk.BACKGROUND_COLOR
@@ -474,7 +489,9 @@ func NewHeaders() Headers {
 // 	colorSelect.CurrentColorBox = box
 // 	colorSelect.Confirm = comfirm
 // 	colorSelect.Cancel = cancel
+
 // 	win.End()
+	
 // 	win.Hide()
 // 	return colorSelect
 // }
@@ -607,6 +624,7 @@ func NewMainForm(w *fltk.Window) {
 	mlSwitch := NewToggleButton(pad*7+35, pad*4, 35, 20, "MSB")
 	mlSwitch.SetCallback(mainForm.MLSwitch)
 	// colorSel := NewButton(pad*8+70, pad*4, 70, 20, "颜色选择")
+	// colorSel.SetAlign(fltk.ALIGN_INSIDE)
 	// colorDia := NewColorSelect(colorSel)
 	// colorSel.SetCallback(func() {
 	// 	colorDia.Window.Show()
