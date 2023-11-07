@@ -5,47 +5,97 @@ import (
 	"math"
 	"strconv"
 	"strings"
-
-	// "syscall"
+	"syscall"
 
 	"github.com/pwiecz/go-fltk"
 )
-
-// windows
-// func GetSystemMetrics(nIndex int) int {
-// 	ret, _, _ := syscall.NewLazyDLL(`User32.dll`).NewProc(`GetSystemMetrics`).Call(uintptr(nIndex))
-// 	return int(ret)
-// }
-
-// func SetWindowPos(hWnd uintptr, hWndInsertAfter, x, y, Width, Height, flags int) {
-// 	syscall.NewLazyDLL(`User32.dll`).NewProc(`SetWindowPos`).Call(hWnd, uintptr(hWndInsertAfter), uintptr(x), uintptr(y), uintptr(Width), uintptr(Height), uintptr(flags))
-// }
 
 var (
 	bitColorMap = map[string]fltk.Color{
 		"0": fltk.WHITE,
 		"1": fltk.BACKGROUND_COLOR,
 	}
-	headerColorMap = map[string]fltk.Color{
-		"same": fltk.BLACK,
-		"diff": fltk.RED,
+	headerColorMap = map[int]fltk.Color{
+		11: fltk.BLACK,
+		14: fltk.RED,
+	}
+	headerFontMap = map[int]fltk.Font{
+		11: fltk.HELVETICA,
+		14: fltk.HELVETICA_BOLD,
 	}
 	textMap = map[string]string{
 		"0": "1",
 		"1": "0",
 	}
-	pad       = 2
-	bitW      = 18
-	bitH      = 22
-	dataWidth = 32
-	maxRow    = 2
-	Row       = 1
-	WIDTH     = dataWidth*(bitW+pad) + pad*8 + bitW*13 + 50
-	HEIGHT    = bitW + maxRow*bitH + pad*(3+maxRow) + 30
-	MaxNum    = int64(math.Pow(2, float64(dataWidth)) - 1)
-	// StartX    = GetSystemMetrics(0)/2 - WIDTH/2 // windows
-	// StartY    = GetSystemMetrics(1)/2 - HEIGHT/2 // windows
+	MLmap = map[string]string{
+		"MSB": "LSB",
+		"LSB": "MSB",
+	}
+	pad                  = 2
+	bitW                 = 18
+	bitH                 = 22
+	dataWidth            = 32
+	maxRow               = 5
+	Row                  = 1
+	WIDTH                = dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad + pad*7 + bitW*13 + 50
+	HEIGHT               = bitW + Row*bitH + pad*(3+Row) + 30
+	maxHeight            = bitW + maxRow*bitH + pad*(3+maxRow) + 30
+	MaxNum               = int64(math.Pow(2, float64(dataWidth)) - 1)
+	user32DLL            = syscall.NewLazyDLL("User32.dll")
+	procGetSystemMetrics = user32DLL.NewProc("GetSystemMetrics")
+	MonitorX, _, _       = procGetSystemMetrics.Call(uintptr(0))
+	MonitorY, _, _       = procGetSystemMetrics.Call(uintptr(1))
+	StartX               = int(MonitorX)/2 - WIDTH/2
+	StartY               = int(MonitorY)/2 - HEIGHT/2
 )
+
+func NewButton(x, y, w, h int, label string) *fltk.Button {
+	button := fltk.NewButton(x, y, w, h, label)
+	button.SetBox(fltk.GLEAM_UP_BOX)
+	button.ClearVisibleFocus()
+	button.SetLabelSize(12)
+	button.SetLabelFont(fltk.HELVETICA)
+	button.SetDownBox(fltk.GLEAM_DOWN_BOX)
+	return button
+}
+
+func NewToggleButton(x, y, w, h int, label string) *fltk.ToggleButton {
+	button := fltk.NewToggleButton(x, y, w, h, label)
+	button.SetBox(fltk.GLEAM_UP_BOX)
+	button.ClearVisibleFocus()
+	button.SetLabelSize(12)
+	button.SetLabelFont(fltk.HELVETICA)
+	button.SetDownBox(fltk.GLEAM_DOWN_BOX)
+	return button
+}
+
+func NewInput(x, y, w, h int, label string) *fltk.Input {
+	input := fltk.NewInput(x, y, w, h)
+	input.SetValue(label)
+	input.SetBox(fltk.BORDER_BOX)
+	return input
+}
+
+func NewBox(boxType fltk.BoxType, x, y, w, h, labelSize int, label string, bgColor fltk.Color) *fltk.Box {
+	box := fltk.NewBox(boxType, x, y, w, h, label)
+	box.SetAlign(fltk.ALIGN_CENTER)
+	box.SetColor(bgColor)
+	box.SetLabelSize(labelSize)
+	box.SetLabelFont(fltk.HELVETICA)
+	return box
+}
+
+func NewGroup(x, y, w, h int) *fltk.Group {
+	group := fltk.NewGroup(x, y, w, h)
+	return group
+}
+
+func NewRadioRoundButton(x, y, w, h, base int, label string, f func(int) func()) *fltk.RadioRoundButton {
+	button := fltk.NewRadioRoundButton(x, y, w, h, label)
+	button.ClearVisibleFocus()
+	button.SetCallback(f(base))
+	return button
+}
 
 func ParseHeight(row int) int {
 	if row == 1 {
@@ -55,87 +105,60 @@ func ParseHeight(row int) int {
 	}
 }
 
+func SetOntop(ontop bool) {
+	swpNoSize := 0x1
+	swpNoMove := 0x2
+	flag := swpNoSize | swpNoMove
+	procSetWindowPos := user32DLL.NewProc("SetWindowPos")
+	procGetForegroundWindow := user32DLL.NewProc("GetForegroundWindow")
+	hwnd, _, _ := procGetForegroundWindow.Call()
+	if ontop {
+		topMost := -1
+		procSetWindowPos.Call(hwnd, uintptr(topMost), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
+	} else {
+		bottom := 1
+		top := 0
+		procSetWindowPos.Call(hwnd, uintptr(bottom), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
+		procSetWindowPos.Call(hwnd, uintptr(top), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
+	}
+}
+
 type Bit struct {
 	*fltk.Box
 }
 
-func (b *Bit) Click(e fltk.Event) bool {
-	if e == fltk.Event(fltk.LeftMouse) {
-		val := b.Label()
-		str := textMap[val]
-		b.SetLabel(str)
-		b.SetColor(bitColorMap[str])
-		return true
-	}
-	return false
+func (b *Bit) Click() {
+	val := b.Label()
+	str := textMap[val]
+	b.SetLabel(str)
+	b.SetColor(bitColorMap[str])
 }
 
 func NewBit(x, y, w, h int) *Bit {
-	bit := fltk.NewBox(fltk.FLAT_BOX, x, y, w, h, "0")
-	bit.SetAlign(fltk.ALIGN_CENTER)
-	bit.SetColor(bitColorMap["0"])
-	bit.SetLabelSize(14)
-	bit.SetBox(fltk.BORDER_BOX)
+	bit := NewBox(fltk.BORDER_BOX, x, y, w, h, 14, "0", fltk.WHITE)
 	return &Bit{bit}
 }
 
-type Header struct {
-	*fltk.Box
-}
-
-func NewHeader(x, y, w, h, ix int) *Header {
-	header := fltk.NewBox(fltk.FLAT_BOX, x, y, w, h, fmt.Sprint(ix))
-	header.SetAlign(fltk.ALIGN_CENTER)
-	header.SetColor(fltk.WHITE)
-	header.SetLabelColor(headerColorMap["same"])
-	header.SetLabelSize(11)
-	header.SetLabelFont(fltk.HELVETICA)
-	return &Header{header}
-}
-
-type Headers []*Header
-
-func (h Headers) UpdateHeader(bitMap map[string]int, c int) {
-	if len(bitMap) == 1 {
-		h[c].SetLabelColor(headerColorMap["same"])
-		h[c].SetLabelSize(11)
-		h[c].SetLabelFont(fltk.HELVETICA)
-	} else {
-		h[c].SetLabelColor(headerColorMap["diff"])
-		h[c].SetLabelSize(14)
-		h[c].SetLabelFont(fltk.HELVETICA_BOLD)
-	}
-	h[c].Redraw()
-}
-
-func NewHeaders() Headers {
-	headers := make([]*Header, dataWidth)
-	for c := 0; c < dataWidth; c++ {
-		head := NewHeader(c*(bitW+pad)+pad, pad*2+28, bitW, bitW, dataWidth-1-c)
-		headers[c] = head
-	}
-	return headers
-}
-
 type BitRow struct {
-	BitLocs         []*Bit
-	Num             *fltk.Input
-	LShift          *fltk.Button
-	ShiftNum        *fltk.Input
-	RShift          *fltk.Button
-	Reverse         *fltk.Button
-	Invert          *fltk.Button
-	Clear           *fltk.Button
+	group           *fltk.Group
+	bitLocs         []*Bit
+	num             *fltk.Input
+	lShift          *fltk.Button
+	shiftNum        *fltk.Input
+	rShift          *fltk.Button
+	reverse         *fltk.Button
+	invert          *fltk.Button
+	clear           *fltk.Button
 	base            int
 	lastNum         int64
 	lastShiftNum    int64
-	ShiftNumDisplay *fltk.Box
+	shiftNumDisplay *fltk.Box
 }
 
 func (b *BitRow) GetBitString() []string {
 	bitList := make([]string, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		bitList[c] = b.BitLocs[c].Label()
+		bitList[c] = b.bitLocs[c].Label()
 	}
 	return bitList
 }
@@ -143,11 +166,11 @@ func (b *BitRow) GetBitString() []string {
 func (b *BitRow) SetNum(num int64) {
 	switch b.base {
 	case 16:
-		b.Num.SetValue(fmt.Sprintf("%x", num))
+		b.num.SetValue(fmt.Sprintf("%x", num))
 	case 10:
-		b.Num.SetValue(fmt.Sprint(num))
+		b.num.SetValue(fmt.Sprint(num))
 	case 8:
-		b.Num.SetValue(fmt.Sprintf("%o", num))
+		b.num.SetValue(fmt.Sprintf("%o", num))
 	}
 }
 
@@ -158,75 +181,66 @@ func (b *BitRow) UpdateNum() {
 	b.SetNum(bin)
 }
 
-func (b *BitRow) ClickClear(fn func()) func() {
-	return func() {
-		for c := 0; c < dataWidth; c++ {
-			b.BitLocs[c].SetLabel("0")
-			b.BitLocs[c].SetColor(bitColorMap["0"])
-		}
-		b.Num.SetValue("0")
-		if fn != nil {
-			fn()
-		}
-		b.Display()
-	}
-}
-
-func (b *BitRow) ClickInvert(fn func()) func() {
-	return func() {
-		for c := 0; c < dataWidth; c++ {
-			b.BitLocs[c].Click(fltk.Event(fltk.LeftMouse))
-		}
-		b.UpdateNum()
-		fn()
-		b.Display()
-	}
-}
-
 func (b *BitRow) GetCurrentNum() (int64, int64) {
-	curNum := b.Num.Value()
+	curNum := b.num.Value()
 	if curNum == "" {
 		b.lastNum = 0
 	}
-	num, err := strconv.ParseInt(b.Num.Value(), b.base, dataWidth*2)
+	num, err := strconv.ParseInt(b.num.Value(), b.base, dataWidth*2)
 	if err == nil {
 		b.lastNum = num
 	} else {
 		b.SetNum(b.lastNum)
 	}
-	shiftNum, err := strconv.ParseInt(b.ShiftNum.Value(), 10, dataWidth*2)
+	shiftNum, err := strconv.ParseInt(b.shiftNum.Value(), 10, dataWidth*2)
 	if err == nil {
 		b.lastShiftNum = shiftNum
 	} else {
 		if b.lastShiftNum != 0 {
-			b.ShiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
+			b.shiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
 		} else {
-			b.ShiftNum.SetValue("")
+			b.shiftNum.SetValue("")
 		}
 	}
 	return b.lastNum, b.lastShiftNum
 }
 
 func (b *BitRow) UpdateBit(num int64) {
-	binStr := strconv.FormatInt(num, 2)
-	n := len(binStr)
-	sum := 0
-	for c := dataWidth - 1; c >= 0; c-- {
-		if sum < n {
-			s := string(binStr[n-sum-1])
-			b.BitLocs[c].SetLabel(s)
-			b.BitLocs[c].SetColor(bitColorMap[s])
-		} else {
-			b.BitLocs[c].SetLabel("0")
-			b.BitLocs[c].SetColor(bitColorMap["0"])
-		}
-		sum++
+	str := fmt.Sprintf("%0*b", dataWidth, num)
+	for c := 0; c < dataWidth; c++ {
+		s := string(str[c])
+		b.bitLocs[c].SetLabel(s)
+		b.bitLocs[c].SetColor(bitColorMap[s])
 	}
 }
 
 func (b *BitRow) UpdateBitNum(num int64) {
 	b.SetNum(num)
 	b.UpdateBit(num)
+}
+
+func (b *BitRow) Display() {
+	b.shiftNum.Hide()
+	b.shiftNumDisplay.Show()
+}
+
+func (b *BitRow) Hide() {
+	b.group.Hide()
+}
+
+func (b *BitRow) Show() {
+	b.group.Show()
+}
+
+func (b *BitRow) DisplayClick(e fltk.Event) bool {
+	if e == fltk.Event(fltk.LeftMouse) {
+		b.shiftNumDisplay.Hide()
+		b.shiftNum.SetValue("")
+		b.shiftNum.Show()
+		b.shiftNum.TakeFocus()
+		return true
+	}
+	return false
 }
 
 func (b *BitRow) ClickLShift(fn func()) func() {
@@ -251,13 +265,13 @@ func (b *BitRow) ClickRShift(fn func()) func() {
 
 func (b *BitRow) ClickReverse(fn func()) func() {
 	return func() {
-		for i, j := 0, len(b.BitLocs)-1; i < j; i, j = i+1, j-1 {
-			h := b.BitLocs[i].Label()
-			e := b.BitLocs[j].Label()
-			b.BitLocs[i].SetLabel(e)
-			b.BitLocs[i].SetColor(bitColorMap[e])
-			b.BitLocs[j].SetLabel(h)
-			b.BitLocs[j].SetColor(bitColorMap[h])
+		for i, j := 0, len(b.bitLocs)-1; i < j; i, j = i+1, j-1 {
+			h := b.bitLocs[i].Label()
+			e := b.bitLocs[j].Label()
+			b.bitLocs[i].SetLabel(e)
+			b.bitLocs[i].SetColor(bitColorMap[e])
+			b.bitLocs[j].SetLabel(h)
+			b.bitLocs[j].SetColor(bitColorMap[h])
 		}
 		b.UpdateNum()
 		fn()
@@ -265,7 +279,7 @@ func (b *BitRow) ClickReverse(fn func()) func() {
 	}
 }
 
-func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
+func (b *BitRow) KeyType(fn func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
 		if e == fltk.Event(fltk.LeftMouse) {
 			b.Display()
@@ -282,23 +296,23 @@ func (b *BitRow) KeyTyped(fn func()) func(fltk.Event) bool {
 }
 
 func (b *BitRow) ShiftNumEvent(e fltk.Event) bool {
-	if e == fltk.Event(fltk.LeftMouse) && b.ShiftNum.HasFocus() {
-		b.ShiftNumDisplay.Show()
-		b.ShiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
-		b.ShiftNum.Hide()
+	if e == fltk.Event(fltk.LeftMouse) && b.shiftNum.HasFocus() {
+		b.shiftNumDisplay.Show()
+		b.shiftNum.SetValue(fmt.Sprint(b.lastShiftNum))
+		b.shiftNum.Hide()
 	}
 	if e == fltk.KEYUP {
 		_, shiftNum := b.GetCurrentNum()
-		b.ShiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
+		b.shiftNumDisplay.SetLabel(fmt.Sprint(shiftNum))
 		return true
 	}
 	return false
 }
 
-func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bool {
+func (b *BitRow) Click(fn func(), fnc func()) func(fltk.Event) bool {
 	return func(e fltk.Event) bool {
 		if e == fltk.Event(fltk.LeftMouse) {
-			fn(e)
+			fn()
 			fnc()
 			b.UpdateNum()
 			b.Display()
@@ -308,181 +322,218 @@ func (b *BitRow) Click(fn func(fltk.Event) bool, fnc func()) func(fltk.Event) bo
 	}
 }
 
-func (b *BitRow) DisplayClick(e fltk.Event) bool {
-	if e == fltk.Event(fltk.LeftMouse) {
-		b.ShiftNumDisplay.Hide()
-		b.ShiftNum.SetValue("")
-		b.ShiftNum.Show()
-		b.ShiftNum.TakeFocus()
-		return true
+func (b *BitRow) ClickClear(fn func()) func() {
+	return func() {
+		for c := 0; c < dataWidth; c++ {
+			b.bitLocs[c].SetLabel("0")
+			b.bitLocs[c].SetColor(bitColorMap["0"])
+		}
+		b.num.SetValue("0")
+		if fn != nil {
+			fn()
+		}
+		b.Display()
 	}
-	return false
 }
 
-func (b *BitRow) Display() {
-	b.ShiftNum.Hide()
-	b.ShiftNumDisplay.Show()
-}
-
-func (b *BitRow) Hide() {
-	for _, obj := range b.BitLocs {
-		obj.Hide()
+func (b *BitRow) ClickInvert(fn func()) func() {
+	return func() {
+		for c := 0; c < dataWidth; c++ {
+			b.bitLocs[c].Click()
+		}
+		b.UpdateNum()
+		fn()
+		b.Display()
 	}
-	b.Num.Hide()
-	b.LShift.Hide()
-	b.ShiftNum.Hide()
-	b.RShift.Hide()
-	b.Reverse.Hide()
-	b.Invert.Hide()
-	b.Clear.Hide()
-	b.ShiftNumDisplay.Hide()
-}
-
-func (b *BitRow) Show() {
-	for _, obj := range b.BitLocs {
-		obj.Show()
-	}
-	b.Num.Show()
-	b.LShift.Show()
-	b.ShiftNum.Show()
-	b.RShift.Show()
-	b.Reverse.Show()
-	b.Invert.Show()
-	b.Clear.Show()
-	b.ShiftNumDisplay.Show()
 }
 
 func NewBitRow(row int, fn func()) *BitRow {
 	bitRow := new(BitRow)
-	bitLocs := make([]*Bit, dataWidth)
 	h := ParseHeight(row)
+	group := fltk.NewGroup(0, h, WIDTH, bitH, fmt.Sprint(row))
+	group.SetLabelType(fltk.NO_LABEL)
+	bitRow.group = group
+	bitLocs := make([]*Bit, dataWidth)
 	for c := 0; c < dataWidth; c++ {
-		bit := NewBit(c*(bitW+pad)+pad, h, bitW, bitH)
+		n := c*bitW + c/4*pad*2 + (c+1)*pad
+		if n == 1 {
+			n = 4
+		}
+		bit := NewBit(n, h, bitW, bitH)
 		bit.SetEventHandler(bitRow.Click(bit.Click, fn))
 		bitLocs[c] = bit
 	}
-	bitRow.BitLocs = bitLocs
-	num := fltk.NewInput(dataWidth*(bitW+pad)+pad, h, bitW*6, bitH)
-	num.SetValue("0")
-	num.SetBox(fltk.BORDER_BOX)
-	num.SetEventHandler(bitRow.KeyTyped(fn))
-	bitRow.Num = num
-	lShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*2+bitW*6, h, 25, bitH, "<<")
-	lShift.SetBox(fltk.BORDER_BOX)
-	lShift.ClearVisibleFocus()
-	lShift.SetLabelSize(12)
-	lShift.SetLabelFont(fltk.HELVETICA)
-	lShift.SetDownBox(fltk.FLAT_BOX)
+	bitsWidth := dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad
+	bitRow.bitLocs = bitLocs
+	num := NewInput(bitsWidth, h, bitW*6, bitH, "0")
+	num.SetEventHandler(bitRow.KeyType(fn))
+	bitRow.num = num
+	lShift := NewButton(bitsWidth+pad+bitW*6, h, 25, bitH, "<<")
 	lShift.SetCallback(bitRow.ClickLShift(fn))
-	bitRow.LShift = lShift
-	shiftNum := fltk.NewInput(dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH)
-	shiftNum.SetValue("1")
-	shiftNum.SetBox(fltk.BORDER_BOX)
+	bitRow.lShift = lShift
+	shiftNum := NewInput(bitsWidth+pad*2+bitW*6+25, h, bitW, bitH, "1")
 	shiftNum.SetEventHandler(bitRow.ShiftNumEvent)
 	shiftNum.Hide()
-	bitRow.ShiftNum = shiftNum
-	rShift := fltk.NewButton(dataWidth*(bitW+pad)+pad*4+bitW*7+25, h, 25, bitH, ">>")
-	rShift.SetBox(fltk.BORDER_BOX)
-	rShift.SetLabelSize(12)
-	rShift.SetLabelFont(fltk.HELVETICA)
-	rShift.SetDownBox(fltk.FLAT_BOX)
-	rShift.ClearVisibleFocus()
+	bitRow.shiftNum = shiftNum
+	rShift := NewButton(bitsWidth+pad*3+bitW*7+25, h, 25, bitH, ">>")
 	rShift.SetCallback(bitRow.ClickRShift(fn))
-	bitRow.RShift = rShift
-	reverse := fltk.NewButton(dataWidth*(bitW+pad)+pad*5+bitW*7+50, h, bitW*2, bitH, "倒序")
-	reverse.SetBox(fltk.BORDER_BOX)
-	reverse.SetLabelSize(12)
-	reverse.SetLabelFont(fltk.HELVETICA)
-	reverse.SetDownBox(fltk.FLAT_BOX)
-	reverse.ClearVisibleFocus()
+	bitRow.rShift = rShift
+	reverse := NewButton(bitsWidth+pad*4+bitW*7+50, h, bitW*2, bitH, "倒序")
 	reverse.SetCallback(bitRow.ClickReverse(fn))
-	bitRow.Reverse = reverse
-	invert := fltk.NewButton(dataWidth*(bitW+pad)+pad*6+bitW*9+50, h, bitW*2, bitH, "转换")
-	invert.SetBox(fltk.BORDER_BOX)
-	invert.SetLabelSize(12)
-	invert.SetLabelFont(fltk.HELVETICA)
-	invert.ClearVisibleFocus()
-	invert.SetDownBox(fltk.FLAT_BOX)
+	bitRow.reverse = reverse
+	invert := NewButton(bitsWidth+pad*5+bitW*9+50, h, bitW*2, bitH, "转换")
 	invert.SetCallback(bitRow.ClickInvert(fn))
-	bitRow.Invert = invert
-	clear := fltk.NewButton(dataWidth*(bitW+pad)+pad*7+bitW*11+50, h, bitW*2, bitH, "清空")
-	clear.SetBox(fltk.BORDER_BOX)
-	clear.SetLabelSize(12)
-	clear.SetLabelFont(fltk.HELVETICA)
-	clear.ClearVisibleFocus()
-	clear.SetDownBox(fltk.FLAT_BOX)
+	bitRow.invert = invert
+	clear := NewButton(bitsWidth+pad*6+bitW*11+50, h, bitW*2, bitH, "清空")
 	clear.SetCallback(bitRow.ClickClear(fn))
-	bitRow.Clear = clear
+	bitRow.clear = clear
 	bitRow.base = 16
 	bitRow.lastNum = 0
 	bitRow.lastShiftNum = 1
-	shiftDisplay := fltk.NewBox(fltk.BORDER_BOX, dataWidth*(bitW+pad)+pad*3+bitW*6+25, h, bitW, bitH, fmt.Sprint(bitRow.lastShiftNum))
-	shiftDisplay.SetAlign(fltk.ALIGN_CENTER)
-	shiftDisplay.SetColor(fltk.WHITE)
-	shiftDisplay.SetLabelFont(fltk.HELVETICA)
+	shiftDisplay := NewBox(fltk.BORDER_BOX, bitsWidth+pad*2+bitW*6+25, h, bitW, bitH, 14, fmt.Sprint(bitRow.lastShiftNum), fltk.WHITE)
 	shiftDisplay.SetEventHandler(bitRow.DisplayClick)
-	bitRow.ShiftNumDisplay = shiftDisplay
+	bitRow.shiftNumDisplay = shiftDisplay
+	group.End()
 	return bitRow
 }
 
+type Header struct {
+	*fltk.Box
+}
+
+func NewHeader(x, y, w, h, ix int) *Header {
+	header := NewBox(fltk.FLAT_BOX, x, y, w, h, 11, fmt.Sprint(ix), fltk.WHITE)
+	return &Header{header}
+}
+
+type Headers []*Header
+
+func (h Headers) UpdateHeader(c, size int) {
+	h[c].SetLabelColor(headerColorMap[size])
+	h[c].SetLabelSize(size)
+	h[c].SetLabelFont(headerFontMap[size])
+	h[c].Redraw()
+}
+
+func NewHeaders() Headers {
+	headers := make([]*Header, dataWidth)
+	for c := 0; c < dataWidth; c++ {
+		n := c*bitW + (c/4)*pad*2 + (c+1)*pad
+		if n == 1 {
+			n = 4
+		}
+		head := NewHeader(n, pad*2+28, bitW, bitW, dataWidth-1-c)
+		headers[c] = head
+	}
+	return headers
+}
+
+// type ColorSelect struct {
+// 	Window          *fltk.Window
+// 	Colors          []*fltk.Box
+// 	CurrentColorBox *fltk.Box
+// 	CurrentColor    fltk.Color
+// 	Confirm         *fltk.Button
+// 	Cancel          *fltk.Button
+// }
+
+// func (c *ColorSelect) Select() {
+// 	for _, box := range c.Colors {
+// 		if box.HasFocus() {
+// 			color := box.Color()
+// 			c.CurrentColor = color
+// 			c.CurrentColorBox.SetColor(color)
+// 		}
+// 	}
+// 	c.Window.Hide()
+// }
+
+// func (c *ColorSelect) Close() {
+// 	c.Window.Hide()
+// }
+
+// func NewColorSelect(b *fltk.Button) *ColorSelect {
+// 	colorSelect := new(ColorSelect)
+// 	colors := make([]*fltk.Box, 10)
+// 	win := fltk.NewWindowWithPosition(205, 100, 200, 200, "颜色选择")
+// 	win.SetColor(fltk.WHITE)
+// 	for i := 0; i < 10; i++ {
+// 		box := fltk.NewBox(fltk.BORDER_FRAME, pad*(i+1), pad, 20, 20)
+// 		box.SetColor(fltk.Color(0x000080 + i*80))
+// 		colors[i] = box
+// 	}
+// 	box := fltk.NewBox(fltk.BORDER_FRAME, pad, 180-pad, 20, 20)
+// 	box.SetColor(fltk.BACKGROUND_COLOR)
+// 	comfirm := NewButton(pad*2+20, 100-pad, 60, 20, "选择")
+// 	cancel := NewButton(pad*3+80, 100-pad, 60, 20, "取消")
+// 	comfirm.SetCallback(colorSelect.Select)
+// 	cancel.SetCallback(colorSelect.Close)
+// 	colorSelect.CurrentColor = fltk.BACKGROUND_COLOR
+// 	colorSelect.Window = win
+// 	colorSelect.Colors = colors
+// 	colorSelect.CurrentColorBox = box
+// 	colorSelect.Confirm = comfirm
+// 	colorSelect.Cancel = cancel
+// 	win.End()
+// 	win.Hide()
+// 	return colorSelect
+// }
+
 type MainForm struct {
-	Headers Headers
-	BitRows []*BitRow
-	AddRow  *fltk.Button
-	RmRow   *fltk.Button
-	Base16  *fltk.RadioRoundButton
-	Base10  *fltk.RadioRoundButton
-	Base8   *fltk.RadioRoundButton
+	Group          *fltk.Group
+	Headers        Headers
+	BitRows        []*BitRow
+	AddRow         *fltk.Button
+	RmRow          *fltk.Button
+	Base16         *fltk.RadioRoundButton
+	Base10         *fltk.RadioRoundButton
+	Base8          *fltk.RadioRoundButton
+	ontop          *fltk.ToggleButton
+	base           int
+	MLSwitchButton *fltk.ToggleButton
+	// ColorSel       *ColorSelect
 }
 
 func (m *MainForm) Updateheaders() {
 	for c := 0; c < dataWidth; c++ {
 		bitMap := make(map[string]int, Row)
 		for r := 0; r < Row; r++ {
-			val := m.BitRows[r].BitLocs[c].Label()
+			val := m.BitRows[r].bitLocs[c].Label()
 			bitMap[val] = 0
 		}
-		m.Headers.UpdateHeader(bitMap, c)
+		if len(bitMap) == 1 {
+			m.Headers.UpdateHeader(c, 11)
+		} else {
+			m.Headers.UpdateHeader(c, 14)
+		}
 	}
 }
 
-func (m *MainForm) Add(w *fltk.Window) func() {
-	return func() {
-		Row++
-		m.RmRow.Activate()
-		if Row == maxRow {
-			m.AddRow.Deactivate()
-		}
-		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
-		for r := 0; r < Row-1; r++ {
-			m.BitRows[r].ShiftNum.Hide()
-			m.BitRows[r].ShiftNumDisplay.Show()
-		}
-		bitRow := m.BitRows[Row-1]
-		bitRow.Show()
-		m.Updateheaders()
+func (m *MainForm) Add() {
+	Row++
+	m.RmRow.Activate()
+	if Row == maxRow {
+		m.AddRow.Deactivate()
 	}
+	HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+	m.Group.Resize(m.Group.X(), m.Group.Y(), WIDTH, HEIGHT)
+	bitRow := m.BitRows[Row-1]
+	bitRow.Show()
+	m.Updateheaders()
 }
 
-func (m *MainForm) Remove(w *fltk.Window) func() {
-	return func() {
-		Row--
-		m.AddRow.Activate()
-		if Row == 1 {
-			m.RmRow.Deactivate()
-		}
-		// HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
-		// w.Resize(w.X(), w.Y(), WIDTH, HEIGHT)
-		for r := 0; r < Row; r++ {
-			m.BitRows[r].ShiftNum.Hide()
-			m.BitRows[r].ShiftNumDisplay.Show()
-		}
-		bitRow := m.BitRows[Row]
-		bitRow.ClickClear(nil)()
-		bitRow.Hide()
-		m.Updateheaders()
+func (m *MainForm) Remove() {
+	Row--
+	m.AddRow.Activate()
+	if Row == 1 {
+		m.RmRow.Deactivate()
 	}
+	HEIGHT = bitW + Row*bitH + pad*(3+Row) + 30
+	m.Group.Resize(m.Group.X(), m.Group.Y(), WIDTH, HEIGHT)
+	bitRow := m.BitRows[Row]
+	bitRow.ClickClear(nil)()
+	bitRow.Hide()
+	m.Updateheaders()
 }
 
 func (m *MainForm) BaseChoise(base int) func() {
@@ -492,15 +543,35 @@ func (m *MainForm) BaseChoise(base int) func() {
 			m.BitRows[r].base = base
 			m.BitRows[r].SetNum(num)
 			if r < Row {
-				m.BitRows[r].ShiftNum.Hide()
-				m.BitRows[r].ShiftNumDisplay.Show()
+				m.BitRows[r].shiftNum.Hide()
+				m.BitRows[r].shiftNumDisplay.Show()
 			}
 		}
 	}
 }
 
+func (m *MainForm) SetOnTop() {
+	status := m.ontop.Value()
+	SetOntop(status)
+}
+
+func (m *MainForm) MLSwitch() {
+	t := m.MLSwitchButton.Label()
+	for c := 0; c < dataWidth; c++ {
+		var label string
+		if t == "LSB" {
+			label = fmt.Sprint(dataWidth - 1 - c)
+		} else {
+			label = fmt.Sprint(c)
+		}
+		m.Headers[c].SetLabel(label)
+	}
+	m.MLSwitchButton.SetLabel(MLmap[t])
+}
+
 func NewMainForm(w *fltk.Window) {
 	mainForm := new(MainForm)
+	mainForm.base = 16
 	bitRows := make([]*BitRow, maxRow)
 	for r := 0; r <= maxRow; r++ {
 		if r == 0 {
@@ -514,46 +585,40 @@ func NewMainForm(w *fltk.Window) {
 		}
 	}
 	mainForm.BitRows = bitRows
-	box := fltk.NewBox(fltk.BORDER_BOX, pad*5+30, pad*4, 118, 20, "进制")
-	box.SetLabelSize(12)
-	box.SetColor(fltk.WHITE)
+	box := NewBox(fltk.GTK_UP_BOX, WIDTH-195, pad*5, 118, 25, 12, "进制", fltk.WHITE)
 	box.SetAlign(fltk.ALIGN_LEFT)
-	base16 := fltk.NewRadioRoundButton(pad*8+30, pad*5, 16, 16, "16")
-	base16.ClearVisibleFocus()
-	base16.SetValue(true)
-	base16.SetCallback(mainForm.BaseChoise(16))
+	base16 := NewRadioRoundButton(WIDTH-190, pad*7+1, 16, 16, 16, "16", mainForm.BaseChoise)
 	mainForm.Base16 = base16
-	base10 := fltk.NewRadioRoundButton(pad*8+70, pad*5, 16, 16, "10")
-	base10.ClearVisibleFocus()
-	base10.SetCallback(mainForm.BaseChoise(10))
+	base10 := NewRadioRoundButton(WIDTH-150, pad*7+1, 16, 16, 10, "10", mainForm.BaseChoise)
 	mainForm.Base10 = base10
-	base8 := fltk.NewRadioRoundButton(pad*8+110, pad*5, 16, 16, "8")
-	base8.ClearVisibleFocus()
-	base8.SetCallback(mainForm.BaseChoise(8))
+	base8 := NewRadioRoundButton(WIDTH-110, pad*7+1, 16, 16, 8, "8", mainForm.BaseChoise)
 	mainForm.Base8 = base8
-	addR := fltk.NewButton(pad*5+150, pad*4, 60, 20, "增加一行")
-	addR.SetBox(fltk.BORDER_BOX)
-	addR.SetLabelSize(12)
-	addR.SetLabelFont(fltk.HELVETICA)
-	addR.ClearVisibleFocus()
-	addR.SetDownBox(fltk.FLAT_BOX)
-	addR.SetCallback(mainForm.Add(w))
-	rmR := fltk.NewButton(pad*6+210, pad*4, 60, 20, "删除一行")
-	rmR.SetBox(fltk.BORDER_BOX)
-	rmR.SetLabelSize(12)
-	rmR.SetLabelFont(fltk.HELVETICA)
-	rmR.ClearVisibleFocus()
-	rmR.SetDownBox(fltk.FLAT_BOX)
+	addR := NewButton(WIDTH-72, pad-1, 60, 20, "增加一行")
+	addR.SetCallback(mainForm.Add)
+	rmR := NewButton(WIDTH-72, pad+21, 60, 20, "删除一行")
 	rmR.Deactivate()
-	rmR.SetCallback(mainForm.Remove(w))
+	rmR.SetCallback(mainForm.Remove)
 	mainForm.AddRow = addR
 	mainForm.RmRow = rmR
+	ontop := NewToggleButton(pad*6, pad*4, 35, 20, "置顶")
+	ontop.SetCallback(mainForm.SetOnTop)
+	base16.SetValue(true)
+	mainForm.ontop = ontop
+	mlSwitch := NewToggleButton(pad*7+35, pad*4, 35, 20, "MSB")
+	mlSwitch.SetCallback(mainForm.MLSwitch)
+	// colorSel := NewButton(pad*8+70, pad*4, 70, 20, "颜色选择")
+	// colorDia := NewColorSelect(colorSel)
+	// colorSel.SetCallback(func() {
+	// 	colorDia.Window.Show()
+	// })
+	mainForm.MLSwitchButton = mlSwitch
+	mainForm.Group = &w.Group
 }
 
 func main() {
 	fltk.InitStyles()
-	// win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具") // windows
-	win := fltk.NewWindowWithPosition(450, 450, WIDTH, HEIGHT, "寄存器工具")
+	win := fltk.NewWindowWithPosition(StartX, StartY, WIDTH, HEIGHT, "寄存器工具")
+	win.SetSizeRange(WIDTH, HEIGHT, WIDTH, maxHeight, 0, 0, false)
 	win.SetColor(fltk.WHITE)
 	NewMainForm(win)
 	win.End()
