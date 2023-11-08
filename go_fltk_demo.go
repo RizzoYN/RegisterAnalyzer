@@ -425,7 +425,7 @@ type Header struct {
 }
 
 func NewHeader(x, y, w, h, ix int) *Header {
-	header := NewBox(fltk.FLAT_BOX, x, y, w, h, 11, fmt.Sprint(ix), fltk.WHITE)
+	header := NewBox(fltk.NO_BOX, x, y, w, h, 11, fmt.Sprint(ix), fltk.WHITE)
 	return &Header{header}
 }
 
@@ -445,7 +445,7 @@ func NewHeaders() Headers {
 		if n == 1 {
 			n = 4
 		}
-		head := NewHeader(n, pad*2+28, bitW, bitW, dataWidth-1-c)
+		head := NewHeader(n, pad*2+28, bitW-2, bitW-2, dataWidth-1-c)
 		headers[c] = head
 	}
 	return headers
@@ -511,7 +511,8 @@ func NewColorSelect(m *MainForm) *ColorSelect {
 		for c := 0; c < 24; c++ {
 			box := fltk.NewButton((pad+15)*c+pad*15+307, pad*r+r*15, 15, 15)
 			box.SetColor(colorCode[idx])
-			box.SetBox(fltk.GLEAM_THIN_UP_BOX)
+			box.SetBox(fltk.BORDER_BOX)
+			box.SetDownBox(fltk.BORDER_BOX)
 			box.SetCallback(colorSelect.Click(m))
 			colors[idx] = box
 			idx++
@@ -830,7 +831,7 @@ func NewMainForm(w *fltk.Window) {
 	analyzeArea := NewBitAnalyze()
 	analyzeArea.input.SetEventHandler(mainForm.Edit)
 	rangeParse.SetCallback(mainForm.Analyze)
-	bitColorBox := fltk.NewBox(fltk.GLEAM_UP_BOX, pad*12+130, pad*6, 12, 12)
+	bitColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*12+130, pad*6, 12, 12)
 	bitColorBox.SetColor(bitColorMap["1"])
 	bitColorSel := NewButton(pad*9+150, pad*4, 60, 20, "颜色选择")
 	colorDia := NewColorSelect(mainForm)
@@ -841,7 +842,7 @@ func NewMainForm(w *fltk.Window) {
 		}
 	}
 	bitColorSel.SetCallback(callBack(0))
-	headerColorBox := fltk.NewBox(fltk.GLEAM_UP_BOX, pad*13+210, pad*6, 12, 12)
+	headerColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*13+210, pad*6, 12, 12)
 	headerColorBox.SetColor(headerColorMap[14])
 	headerColorSel := NewButton(pad*10+230, pad*4, 80, 20, "对比颜色选择")
 	headerColorSel.SetCallback(callBack(1))
