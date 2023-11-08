@@ -428,73 +428,69 @@ func NewHeaders() Headers {
 	return headers
 }
 
-// type ColorSelect struct {
-// 	Window          *fltk.Window
-// 	Colors          []*fltk.Box
-// 	CurrentColorBox *fltk.Box
-// 	CurrentColor    fltk.Color
-// 	Confirm         *fltk.Button
-// 	Cancel          *fltk.Button
-// }
+type ColorSelect struct {
+	group  *fltk.Group
+	colors []*fltk.Button
+	index  int
+}
 
-// func (c *ColorSelect) Select() {
-// 	for _, box := range c.Colors {
-// 		if box.HasFocus() {
-// 			color := box.Color()
-// 			c.CurrentColor = color
-// 			c.CurrentColorBox.SetColor(color)
-// 		}
-// 	}
-// 	c.Window.Hide()
-// }
+func (c *ColorSelect) Click(m *MainForm) func() {
+	return func() {
+		var color fltk.Color
+		for _, box := range c.colors {
+			if box.HasFocus() {
+				color = box.Color()
+			}
+		}
+		if c.index == 0 {
+			m.BitColorBox.SetColor(color)
+			m.BitColorBox.Redraw()
+			bitColorMap["1"] = color
+			for r:=0; r<Row; r++ {
+				bitRow := m.BitRows[r]
+				num, _ := bitRow.GetCurrentNum()
+				bitRow.UpdateBit(num)
+			}
+		} else {
+			headerColorMap[14] = color
+			m.HeaderColorBox.SetColor(color)
+			m.HeaderColorBox.Redraw()
+			m.Updateheaders()
+		}
+		c.group.Hide()
+	}
+}
 
-// func (c *ColorSelect) Click(e fltk.Event) bool {
-// 	if e == fltk.Event(fltk.LEFT) {
-// 		for _, box := range c.Colors {
-// 			if box.HasFocus() {
-// 				color := box.Color()
-// 				c.CurrentColor = color
-// 			}
-// 		}
-// 		return true
-// 	}
-// 	return false
-// }
-
-// func (c *ColorSelect) Close() {
-// 	c.Window.Hide()
-// }
-
-// func NewColorSelect(b *fltk.Button) *ColorSelect {
-// 	colorSelect := new(ColorSelect)
-// 	colors := make([]*fltk.Box, 10)
-// 	win := fltk.NewWindowWithPosition(205, 100, 500, 500, "颜色选择")
-// 	win.SetColor(fltk.Color(0x0f0f0f))
-
-// 	for i := 0; i < 10; i++ {
-// 		box := fltk.NewBox(fltk.BORDER_BOX, pad*(i+1)+i*20, pad, 20, 20)
-// 		box.SetColor(fltk.Color(0x000080 + i*20))
-// 		box.SetEventHandler(colorSelect.Click)
-// 		colors[i] = box
-// 	}
-// 	box := fltk.NewBox(fltk.BORDER_BOX, pad, 180-pad, 20, 20)
-// 	box.SetColor(fltk.BACKGROUND_COLOR)
-// 	comfirm := NewButton(0, 100, 60, 20, "选择")
-// 	cancel := NewButton(65, 100, 60, 20, "取消")
-// 	comfirm.SetCallback(colorSelect.Select)
-// 	cancel.SetCallback(colorSelect.Close)
-// 	colorSelect.CurrentColor = fltk.BACKGROUND_COLOR
-// 	colorSelect.Window = win
-// 	colorSelect.Colors = colors
-// 	colorSelect.CurrentColorBox = box
-// 	colorSelect.Confirm = comfirm
-// 	colorSelect.Cancel = cancel
-
-// 	win.End()
-	
-// 	win.Hide()
-// 	return colorSelect
-// }
+func NewColorSelect(m *MainForm) *ColorSelect {
+	group := fltk.NewGroup(pad*10+310, 0, WIDTH-pad*10-540, 30)
+	group.SetLabelType(fltk.NO_LABEL)
+	colorSelect := new(ColorSelect)
+	colors := make([]*fltk.Button, 24)
+	colorCode := []fltk.Color{
+		fltk.BACKGROUND_COLOR, fltk.INACTIVE_COLOR, fltk.DARK_BLUE, fltk.DARK_CYAN, fltk.DARK_GREEN,
+		fltk.DARK_MAGENTA, fltk.DARK_RED, fltk.DARK_YELLOW, fltk.LIGHT2, fltk.SELECTION_COLOR,
+		fltk.BLUE, fltk.CYAN, fltk.GREEN, fltk.MAGENTA, fltk.RED, fltk.YELLOW,
+		fltk.Color(0x00800000), fltk.Color(0x008B8B00), fltk.Color(0x00BFFF00),
+		fltk.Color(0x00Fe7e00), fltk.Color(0x4B008200), fltk.Color(0x69696900),
+		fltk.Color(0x77889900), fltk.Color(0x80808000),
+	}
+	idx := 0
+	for r := 0; r < 2; r++ {
+		for c := 0; c < 12; c++ {
+			box := fltk.NewButton((pad+15)*c+pad*12+310, pad*r+r*15, 15, 15)
+			box.SetColor(colorCode[idx])
+			box.SetBox(fltk.GLEAM_THIN_UP_BOX)
+			box.SetCallback(colorSelect.Click(m))
+			colors[idx] = box
+			idx++
+		}
+	}
+	colorSelect.colors = colors
+	colorSelect.group = group
+	group.End()
+	group.Hide()
+	return colorSelect
+}
 
 type MainForm struct {
 	Group          *fltk.Group
@@ -508,7 +504,11 @@ type MainForm struct {
 	ontop          *fltk.ToggleButton
 	base           int
 	MLSwitchButton *fltk.ToggleButton
-	// ColorSel       *ColorSelect
+	BitColorSel    *fltk.Button
+	BitColorBox    *fltk.Box
+	HeaderColorSel *fltk.Button
+	HeaderColorBox *fltk.Box
+	BitRangeParse  *fltk.ToggleButton
 }
 
 func (m *MainForm) Updateheaders() {
@@ -623,13 +623,30 @@ func NewMainForm(w *fltk.Window) {
 	mainForm.ontop = ontop
 	mlSwitch := NewToggleButton(pad*7+35, pad*4, 35, 20, "MSB")
 	mlSwitch.SetCallback(mainForm.MLSwitch)
-	// colorSel := NewButton(pad*8+70, pad*4, 70, 20, "颜色选择")
-	// colorSel.SetAlign(fltk.ALIGN_INSIDE)
-	// colorDia := NewColorSelect(colorSel)
-	// colorSel.SetCallback(func() {
-	// 	colorDia.Window.Show()
-	// })
+
+	rangeParse := NewToggleButton(pad*8+70, pad*4, 60, 20, "位域解析")
+
+	bitColorBox := fltk.NewBox(fltk.GLEAM_UP_BOX, pad*12+130, pad*6, 12, 12)
+	bitColorBox.SetColor(bitColorMap["1"])
+	bitColorSel := NewButton(pad*9+150, pad*4, 60, 20, "颜色选择")
+	colorDia := NewColorSelect(mainForm)
+	callBack := func(i int) func() {
+		return func() {
+			colorDia.group.Show()
+			colorDia.index = i
+		}
+	}
+	bitColorSel.SetCallback(callBack(0))
+	headerColorBox := fltk.NewBox(fltk.GLEAM_UP_BOX, pad*13+210, pad*6, 12, 12)
+	headerColorBox.SetColor(headerColorMap[14])
+	headerColorSel := NewButton(pad*10+230, pad*4, 80, 20, "对比颜色选择")
+	headerColorSel.SetCallback(callBack(1))
+	mainForm.BitColorSel = bitColorSel
+	mainForm.BitColorBox = bitColorBox
+	mainForm.HeaderColorSel = headerColorSel
+	mainForm.HeaderColorBox = headerColorBox
 	mainForm.MLSwitchButton = mlSwitch
+	mainForm.BitRangeParse = rangeParse
 	mainForm.Group = &w.Group
 }
 
