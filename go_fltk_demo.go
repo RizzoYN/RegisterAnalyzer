@@ -445,7 +445,7 @@ func NewHeaders() Headers {
 		if n == 1 {
 			n = 4
 		}
-		head := NewHeader(n, pad*2+28, bitW-2, bitW-2, dataWidth-1-c)
+		head := NewHeader(n, pad*2+28, bitW, bitW, dataWidth-1-c)
 		headers[c] = head
 	}
 	return headers
