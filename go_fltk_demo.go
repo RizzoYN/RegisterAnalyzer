@@ -425,7 +425,7 @@ type Header struct {
 }
 
 func NewHeader(x, y, w, h, ix int) *Header {
-	header := NewBox(fltk.NO_BOX, x, y, w, h, 11, fmt.Sprint(ix), fltk.WHITE)
+	header := NewBox(fltk.FLAT_BOX, x, y, w, h, 11, fmt.Sprint(ix), fltk.WHITE)
 	return &Header{header}
 }
 
