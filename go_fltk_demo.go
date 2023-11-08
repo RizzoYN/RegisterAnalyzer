@@ -487,18 +487,25 @@ func (c *ColorSelect) Click(m *MainForm) func() {
 func NewColorSelect(m *MainForm) *ColorSelect {
     group := fltk.NewGroup(pad*10+310, 0, WIDTH-pad*10-540, 30)
     colorSelect := new(ColorSelect)
-    colors := make([]*fltk.Button, 24)
+    colors := make([]*fltk.Button, 46)
     colorCode := []fltk.Color{
         fltk.BACKGROUND_COLOR, fltk.INACTIVE_COLOR, fltk.DARK_BLUE, fltk.DARK_CYAN, fltk.DARK_GREEN,
         fltk.DARK_MAGENTA, fltk.DARK_RED, fltk.DARK_YELLOW, fltk.LIGHT2, fltk.SELECTION_COLOR,
         fltk.BLUE, fltk.CYAN, fltk.GREEN, fltk.MAGENTA, fltk.RED, fltk.YELLOW,
-        fltk.Color(0x00800000), fltk.Color(0x008B8B00), fltk.Color(0x00BFFF00),
-        fltk.Color(0x00Fe7e00), fltk.Color(0x4B008200), fltk.Color(0x69696900),
-        fltk.Color(0x77889900), fltk.Color(0x80808000),
+        fltk.Color(0x008B8B00), fltk.Color(0x00CED100), fltk.Color(0x00FFFF00),
+        fltk.Color(0x1E90FF00), fltk.Color(0x20B2AA00), fltk.Color(0x2F4F4F00),
+        fltk.Color(0x483D8B00), fltk.Color(0x4B008200), fltk.Color(0xBA55D300),
+        fltk.Color(0x6B8E2300), fltk.Color(0x80000000), fltk.Color(0x80008000),
+        fltk.Color(0x8A2BE200), fltk.Color(0x8B451300), fltk.Color(0x8FBC8F00),
+        fltk.Color(0x90EE9000), fltk.Color(0x9932CC00), fltk.Color(0x9400D300),
+        fltk.Color(0x9ACD3200), fltk.Color(0xA0522D00), fltk.Color(0xA52A2A00),
+        fltk.Color(0xADD8E600), fltk.Color(0xB2222200), fltk.Color(0xB8860B00),
+        fltk.Color(0x00800000), fltk.Color(0xC7158500), fltk.Color(0x00BFFF00),
+        fltk.Color(0x00Fe7e00), fltk.Color(0xEEE8AA00), fltk.Color(0x69696900),
     }
     idx := 0
     for r := 0; r < 2; r++ {
-        for c := 0; c < 12; c++ {
+        for c := 0; c < 23; c++ {
             box := fltk.NewButton((pad+15)*c+pad*15+310, pad*r+r*15, 15, 15)
             box.SetColor(colorCode[idx])
             box.SetBox(fltk.GLEAM_THIN_UP_BOX)
