@@ -43,6 +43,11 @@ var (
 	MaxNum                  = int64(math.Pow(2, float64(dataWidth)) - 1)
 	user32DLL               = syscall.NewLazyDLL("User32.dll")
 	procGetSystemMetrics    = user32DLL.NewProc("GetSystemMetrics")
+	procGetSystemMenu       = user32DLL.NewProc("GetSystemMenu")
+	procDeleteMenu          = user32DLL.NewProc("DeleteMenu")
+	procDrawMenuBar         = user32DLL.NewProc("DrawMenuBar")
+	procGetForegroundWindow = user32DLL.NewProc("GetForegroundWindow")
+	procSetWindowPos        = user32DLL.NewProc("SetWindowPos")
 	MonitorX, _, _          = procGetSystemMetrics.Call(uintptr(0))
 	MonitorY, _, _          = procGetSystemMetrics.Call(uintptr(1))
 	StartX                  = int(MonitorX)/2 - WIDTH/2
@@ -120,8 +125,6 @@ func SetOntop(ontop bool) {
 	swpNoSize := 0x1
 	swpNoMove := 0x2
 	flag := swpNoSize | swpNoMove
-	procSetWindowPos := user32DLL.NewProc("SetWindowPos")
-	procGetForegroundWindow := user32DLL.NewProc("GetForegroundWindow")
 	hwnd, _, _ := procGetForegroundWindow.Call()
 	if ontop {
 		topMost := -1
@@ -135,10 +138,7 @@ func SetOntop(ontop bool) {
 }
 
 func DisableMenuAndFullScreen() {
-	procGetSystemMenu := user32DLL.NewProc("GetSystemMenu")
-	procDeleteMenu := user32DLL.NewProc("DeleteMenu")
-	procDrawMenuBar := user32DLL.NewProc("DrawMenuBar")
-	procGetForegroundWindow := user32DLL.NewProc("GetForegroundWindow")
+
 	hwnd, _, _ := procGetForegroundWindow.Call()
 	hmenu, _, _ := procGetSystemMenu.Call(hwnd, uintptr(0))
 	procDeleteMenu.Call(hmenu, uintptr(0xF030), uintptr(0))
