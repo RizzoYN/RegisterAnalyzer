@@ -31,23 +31,23 @@ var (
 		"MSB": "LSB",
 		"LSB": "MSB",
 	}
-	pad                  = 2
-	bitW                 = 18
-	bitH                 = 22
-	dataWidth            = 32
-	maxRow               = 5
-	Row                  = 1
-	WIDTH                = dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad + pad*7 + bitW*13 + 50
-	HEIGHT               = bitW + Row*bitH + pad*(3+Row) + 30
-	maxHeight            = bitW + maxRow*bitH + pad*(3+maxRow) + 42 + bitH
-	MaxNum               = int64(math.Pow(2, float64(dataWidth)) - 1)
-	user32DLL            = syscall.NewLazyDLL("User32.dll")
-	procGetSystemMetrics = user32DLL.NewProc("GetSystemMetrics")
-	MonitorX, _, _       = procGetSystemMetrics.Call(uintptr(0))
-	MonitorY, _, _       = procGetSystemMetrics.Call(uintptr(1))
-	StartX               = int(MonitorX)/2 - WIDTH/2
-	StartY               = int(MonitorY)/2 - HEIGHT/2
-	svg                  = `<svg version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m3.5 1.5c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h2v-2h-2v-11h11v2h2v-2c0-1.11-.89-2-2-2h-11m6 6c-1.11 0-2 .89-2 2v2h2v-2h2v-2h-2m4 0v2h1v1h2v-3h-3m5 0v2h2v11h-11v-2h-2v2c0 1.11.89 2 2 2h11c1.11 0 2-.89 2-2v-11c0-1.11-.89-2-2-2h-2m-4 5v2h-2v2h2c1.11 0 2-.89 2-2v-2h-2m-7 1v3h3v-2h-1v-1z" style="fill:#42a5f5"/></svg>`
+	pad                     = 2
+	bitW                    = 18
+	bitH                    = 22
+	dataWidth               = 32
+	maxRow                  = 5
+	Row                     = 1
+	WIDTH                   = dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad + pad*7 + bitW*13 + 50
+	HEIGHT                  = bitW + Row*bitH + pad*(3+Row) + 30
+	maxHeight               = bitW + maxRow*bitH + pad*(3+maxRow) + 42 + bitH
+	MaxNum                  = int64(math.Pow(2, float64(dataWidth)) - 1)
+	user32DLL               = syscall.NewLazyDLL("User32.dll")
+	procGetSystemMetrics    = user32DLL.NewProc("GetSystemMetrics")
+	MonitorX, _, _          = procGetSystemMetrics.Call(uintptr(0))
+	MonitorY, _, _          = procGetSystemMetrics.Call(uintptr(1))
+	StartX                  = int(MonitorX)/2 - WIDTH/2
+	StartY                  = int(MonitorY)/2 - HEIGHT/2
+	svg                     = `<svg version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m3.5 1.5c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h2v-2h-2v-11h11v2h2v-2c0-1.11-.89-2-2-2h-11m6 6c-1.11 0-2 .89-2 2v2h2v-2h2v-2h-2m4 0v2h1v1h2v-3h-3m5 0v2h2v11h-11v-2h-2v2c0 1.11.89 2 2 2h11c1.11 0 2-.89 2-2v-11c0-1.11-.89-2-2-2h-2m-4 5v2h-2v2h2c1.11 0 2-.89 2-2v-2h-2m-7 1v3h3v-2h-1v-1z" style="fill:#42a5f5"/></svg>`
 )
 
 func NewButton(x, y, w, h int, label string) *fltk.Button {
@@ -132,6 +132,20 @@ func SetOntop(ontop bool) {
 		procSetWindowPos.Call(hwnd, uintptr(bottom), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
 		procSetWindowPos.Call(hwnd, uintptr(top), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
 	}
+}
+
+func DisableMenuAndFullScreen() {
+	procGetSystemMenu := user32DLL.NewProc("GetSystemMenu")
+	procDeleteMenu := user32DLL.NewProc("DeleteMenu")
+	procDrawMenuBar := user32DLL.NewProc("DrawMenuBar")
+	procGetForegroundWindow := user32DLL.NewProc("GetForegroundWindow")
+	hwnd, _, _ := procGetForegroundWindow.Call()
+	hmenu, _, err := procGetSystemMenu.Call(hwnd, uintptr(0))
+	if err != nil {
+		fmt.Println(hmenu)
+	}
+	procDeleteMenu.Call(hmenu, uintptr(0xF030), uintptr(0))
+	procDrawMenuBar.Call(hwnd)
 }
 
 type Bit struct {
@@ -860,5 +874,6 @@ func main() {
 	win.SetIcons([]*fltk.RgbImage{&icon.RgbImage})
 	win.End()
 	win.Show()
+	DisableMenuAndFullScreen()
 	fltk.Run()
 }
