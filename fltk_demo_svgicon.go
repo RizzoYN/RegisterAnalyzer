@@ -138,7 +138,6 @@ func SetOntop(ontop bool) {
 }
 
 func DisableMenuAndFullScreen() {
-
 	hwnd, _, _ := procGetForegroundWindow.Call()
 	hmenu, _, _ := procGetSystemMenu.Call(hwnd, uintptr(0))
 	procDeleteMenu.Call(hmenu, uintptr(0xF030), uintptr(0))
