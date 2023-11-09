@@ -140,10 +140,7 @@ func DisableMenuAndFullScreen() {
 	procDrawMenuBar := user32DLL.NewProc("DrawMenuBar")
 	procGetForegroundWindow := user32DLL.NewProc("GetForegroundWindow")
 	hwnd, _, _ := procGetForegroundWindow.Call()
-	hmenu, _, err := procGetSystemMenu.Call(hwnd, uintptr(0))
-	if err != nil {
-		fmt.Println(hmenu)
-	}
+	hmenu, _, _ := procGetSystemMenu.Call(hwnd, uintptr(0))
 	procDeleteMenu.Call(hmenu, uintptr(0xF030), uintptr(0))
 	procDrawMenuBar.Call(hwnd)
 }
