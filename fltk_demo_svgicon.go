@@ -687,14 +687,13 @@ func (m *MainForm) Analyze() {
 }
 
 func (m *MainForm) SetNum(num int64, r int32) {
-	output := m.AnalyzeArea.res[r]
 	switch m.base {
 	case 16:
-		output.SetValue(fmt.Sprintf("%x", num))
+		m.AnalyzeArea.res[r].SetValue(fmt.Sprintf("%x", num))
 	case 10:
-		output.SetValue(fmt.Sprint(num))
+		m.AnalyzeArea.res[r].SetValue(fmt.Sprint(num))
 	case 8:
-		output.SetValue(fmt.Sprintf("%o", num))
+		m.AnalyzeArea.res[r].SetValue(fmt.Sprintf("%o", num))
 	}
 }
 
