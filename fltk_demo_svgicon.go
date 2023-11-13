@@ -809,13 +809,13 @@ func NewMainForm(w *fltk.Window) {
 		}
 	}
 	mainForm.BitRows = bitRows
-	box := NewBox(fltk.GTK_UP_BOX, WIDTH-195, pad*5, 118, 25, 12, "进制", fltk.WHITE)
-	box.SetAlign(fltk.ALIGN_LEFT)
-	base16 := NewRadioRoundButton(WIDTH-190, pad*7+1, 16, 16, 16, "16", mainForm.BaseChoise)
+	box := NewBox(fltk.GTK_UP_BOX, WIDTH-195, 18, 118, 25, 12, "进制", fltk.WHITE)
+	box.SetAlign(fltk.ALIGN_TOP)
+	base16 := NewRadioRoundButton(WIDTH-190, pad*11+1, 16, 16, 16, "16", mainForm.BaseChoise)
 	mainForm.Base16 = base16
-	base10 := NewRadioRoundButton(WIDTH-150, pad*7+1, 16, 16, 10, "10", mainForm.BaseChoise)
+	base10 := NewRadioRoundButton(WIDTH-150, pad*11+1, 16, 16, 10, "10", mainForm.BaseChoise)
 	mainForm.Base10 = base10
-	base8 := NewRadioRoundButton(WIDTH-110, pad*7+1, 16, 16, 8, "8", mainForm.BaseChoise)
+	base8 := NewRadioRoundButton(WIDTH-110, pad*11+1, 16, 16, 8, "8", mainForm.BaseChoise)
 	mainForm.Base8 = base8
 	addR := NewButton(WIDTH-72, pad-1, 60, 20, "增加一行")
 	addR.SetCallback(mainForm.Add)
