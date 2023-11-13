@@ -53,7 +53,7 @@ var (
 	StartY               = int(MonitorY)/2 - HEIGHT/2
 )
 
-//go:embed 32.png
+//go:embed icon.png
 var icon []byte
 
 func NewButton(x, y, w, h int, label string) *fltk.Button {
