@@ -841,8 +841,13 @@ func NewMainForm(w *fltk.Window) {
 	colorDia := NewColorSelect(mainForm)
 	callBack := func(i int) func() {
 		return func() {
-			colorDia.group.Show()
-			colorDia.index = i
+			if colorDia.group.Visible() {
+				colorDia.group.Hide()
+				colorDia.index = i
+			} else {
+				colorDia.group.Show()
+				colorDia.index = i
+			}
 		}
 	}
 	bitColorSel.SetCallback(callBack(0))
