@@ -502,7 +502,7 @@ func NewColorSelect(m *MainForm) *ColorSelect {
 		fltk.Color(0x00FFFF00), fltk.Color(0xFFE4E100), fltk.Color(0xFF8C0000),
 		fltk.Color(0x1E90FF00), fltk.Color(0x20B2AA00), fltk.Color(0x2F4F4F00),
 		fltk.Color(0x483D8B00), fltk.Color(0x4B008200), fltk.Color(0xBA55D300),
-		fltk.Color(0x6B8E2300), fltk.Color(0x80000000), fltk.Color(0x80008000),
+		fltk.Color(0x6B8E2300), fltk.Color(0xADFF2F00), fltk.Color(0x80008000),
 		fltk.Color(0x8A2BE200), fltk.Color(0x8B451300), fltk.Color(0x8FBC8F00),
 		fltk.Color(0x90EE9000), fltk.Color(0x9932CC00), fltk.Color(0x9400D300),
 		fltk.Color(0x9ACD3200), fltk.Color(0xA0522D00), fltk.Color(0xA52A2A00),
