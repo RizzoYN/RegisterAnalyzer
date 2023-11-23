@@ -55,13 +55,14 @@ var (
 	svg                     = `<svg version="1.1" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m3.5 1.5c-1.11 0-2 .89-2 2v11c0 1.11.89 2 2 2h2v-2h-2v-11h11v2h2v-2c0-1.11-.89-2-2-2h-11m6 6c-1.11 0-2 .89-2 2v2h2v-2h2v-2h-2m4 0v2h1v1h2v-3h-3m5 0v2h2v11h-11v-2h-2v2c0 1.11.89 2 2 2h11c1.11 0 2-.89 2-2v-11c0-1.11-.89-2-2-2h-2m-4 5v2h-2v2h2c1.11 0 2-.89 2-2v-2h-2m-7 1v3h3v-2h-1v-1z" style="fill:#42a5f5"/></svg>`
 )
 
-func NewButton(x, y, w, h int, label string) *fltk.Button {
+func NewButton(x, y, w, h int, label string, call func()) *fltk.Button {
 	button := fltk.NewButton(x, y, w, h, label)
 	button.SetBox(fltk.GLEAM_UP_BOX)
 	button.ClearVisibleFocus()
 	button.SetLabelSize(12)
 	button.SetLabelFont(fltk.HELVETICA)
 	button.SetDownBox(fltk.GLEAM_DOWN_BOX)
+	button.SetCallback(call)
 	return button
 }
 
@@ -395,24 +396,19 @@ func NewBitRow(row int, fn, fnc func()) *BitRow {
 	num := NewInput(bitsWidth, h, bitW*6, bitH, "0")
 	num.SetEventHandler(bitRow.KeyType(fn, fnc))
 	bitRow.num = num
-	lShift := NewButton(bitsWidth+pad+bitW*6, h, 25, bitH, "<<")
-	lShift.SetCallback(bitRow.ClickLShift(fn, fnc))
+	lShift := NewButton(bitsWidth+pad+bitW*6, h, 25, bitH, "<<", bitRow.ClickLShift(fn, fnc))
 	bitRow.lShift = lShift
 	shiftNum := NewInput(bitsWidth+pad*2+bitW*6+25, h, bitW, bitH, "1")
 	shiftNum.SetEventHandler(bitRow.ShiftNumEvent)
 	shiftNum.Hide()
 	bitRow.shiftNum = shiftNum
-	rShift := NewButton(bitsWidth+pad*3+bitW*7+25, h, 25, bitH, ">>")
-	rShift.SetCallback(bitRow.ClickRShift(fn, fnc))
+	rShift := NewButton(bitsWidth+pad*3+bitW*7+25, h, 25, bitH, ">>", bitRow.ClickRShift(fn, fnc))
 	bitRow.rShift = rShift
-	reverse := NewButton(bitsWidth+pad*4+bitW*7+50, h, bitW*2, bitH, "倒序")
-	reverse.SetCallback(bitRow.ClickReverse(fn, fnc))
+	reverse := NewButton(bitsWidth+pad*4+bitW*7+50, h, bitW*2, bitH, "倒序", bitRow.ClickReverse(fn, fnc))
 	bitRow.reverse = reverse
-	invert := NewButton(bitsWidth+pad*5+bitW*9+50, h, bitW*2, bitH, "转换")
-	invert.SetCallback(bitRow.ClickInvert(fn, fnc))
+	invert := NewButton(bitsWidth+pad*5+bitW*9+50, h, bitW*2, bitH, "转换", bitRow.ClickInvert(fn, fnc))
 	bitRow.invert = invert
-	clear := NewButton(bitsWidth+pad*6+bitW*11+50, h, bitW*2, bitH, "清空")
-	clear.SetCallback(bitRow.ClickClear(fn, fnc))
+	clear := NewButton(bitsWidth+pad*6+bitW*11+50, h, bitW*2, bitH, "清空", bitRow.ClickClear(fn, fnc))
 	bitRow.clear = clear
 	bitRow.base = 16
 	bitRow.lastNum = 0
@@ -818,11 +814,9 @@ func NewMainForm(w *fltk.Window) {
 	mainForm.Base10 = base10
 	base8 := NewRadioRoundButton(WIDTH-110, pad*11+1, 16, 16, 8, "8", mainForm.BaseChoise)
 	mainForm.Base8 = base8
-	addR := NewButton(WIDTH-72, pad-1, 60, 20, "增加一行")
-	addR.SetCallback(mainForm.Add)
-	rmR := NewButton(WIDTH-72, pad+21, 60, 20, "删除一行")
+	addR := NewButton(WIDTH-72, pad-1, 60, 20, "增加一行", mainForm.Add)
+	rmR := NewButton(WIDTH-72, pad+21, 60, 20, "删除一行", mainForm.Remove)
 	rmR.Deactivate()
-	rmR.SetCallback(mainForm.Remove)
 	mainForm.AddRow = addR
 	mainForm.RmRow = rmR
 	ontop := NewToggleButton(pad*6, pad*4, 35, 20, "置顶")
@@ -837,7 +831,6 @@ func NewMainForm(w *fltk.Window) {
 	rangeParse.SetCallback(mainForm.Analyze)
 	bitColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*12+130, pad*6, 12, 12)
 	bitColorBox.SetColor(bitColorMap["1"])
-	bitColorSel := NewButton(pad*9+150, pad*4, 60, 20, "颜色选择")
 	colorDia := NewColorSelect(mainForm)
 	callBack := func(i int) func() {
 		return func() {
@@ -850,11 +843,10 @@ func NewMainForm(w *fltk.Window) {
 			}
 		}
 	}
-	bitColorSel.SetCallback(callBack(0))
+	bitColorSel := NewButton(pad*9+150, pad*4, 60, 20, "颜色选择", callBack(0))
 	headerColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*13+210, pad*6, 12, 12)
 	headerColorBox.SetColor(headerColorMap[14])
-	headerColorSel := NewButton(pad*10+230, pad*4, 80, 20, "对比颜色选择")
-	headerColorSel.SetCallback(callBack(1))
+	headerColorSel := NewButton(pad*10+230, pad*4, 80, 20, "对比颜色选择", callBack(1))
 	mainForm.BitColorSel = bitColorSel
 	mainForm.BitColorBox = bitColorBox
 	mainForm.HeaderColorSel = headerColorSel
