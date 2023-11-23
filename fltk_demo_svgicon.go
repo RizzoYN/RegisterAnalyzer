@@ -463,6 +463,7 @@ func (c *ColorSelect) Click(m *MainForm) func() {
 		for _, box := range c.colors {
 			if box.HasFocus() {
 				color = box.Color()
+				break
 			}
 		}
 		if c.index == 0 {
