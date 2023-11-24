@@ -486,7 +486,7 @@ func (c *ColorSelect) Click(m *MainForm) func() {
 }
 
 func NewColorSelect(m *MainForm) *ColorSelect {
-	group := fltk.NewGroup(pad*10+307, 0, WIDTH-pad*10-505, 30)
+	group := fltk.NewGroup(pad*10+307, 0, WIDTH-pad*10-504, 30)
 	colorSelect := new(ColorSelect)
 	colors := make([]*fltk.Button, 52)
 	colorCode := []fltk.Color{
@@ -684,12 +684,12 @@ func (m *MainForm) Analyze() {
 		for _, output := range m.AnalyzeArea.res {
 			output.SetPosition(output.X(), HEIGHT)
 		}
-		HEIGHT += bitH + 12
+		HEIGHT += bitH + 14
 		m.AnalyzeArea.group.Show()
 		m.Group.Resize(m.Group.X(), m.Group.Y(), WIDTH, HEIGHT)
 	} else {
 		m.AnalyzeArea.group.Hide()
-		HEIGHT -= bitH + 12
+		HEIGHT -= bitH + 14
 		m.Group.Resize(m.Group.X(), m.Group.Y(), WIDTH, HEIGHT)
 	}
 	m.AnalyzeAreaChange()
