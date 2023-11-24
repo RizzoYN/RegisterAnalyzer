@@ -315,6 +315,7 @@ func (b *BitRow) KeyType(fn, fnc func()) func(fltk.Event) bool {
 			fn()
 			fnc()
 			b.Display()
+			b.UpdateNum()
 			return true
 		}
 		return false
