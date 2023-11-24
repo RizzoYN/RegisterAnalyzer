@@ -38,7 +38,7 @@ var (
 	maxRow                  = 5
 	Row                     = 1
 	WIDTH                   = dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad + pad*7 + bitW*13 + 50
-	HEIGHT                  = bitW + Row*bitH + pad*(3+Row) + 30
+	HEIGHT                  = bitW + Row*bitH + pad*(3+Row) + 28
 	maxHeight               = bitW + maxRow*bitH + pad*(3+maxRow) + 42 + bitH
 	MaxNum                  = int64(math.Pow(2, float64(dataWidth)) - 1)
 	user32DLL               = syscall.NewLazyDLL("User32.dll")
