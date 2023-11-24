@@ -32,8 +32,8 @@ var (
 		"LSB": "MSB",
 	}
 	pad                     = 2
-	bitW                    = 18
-	bitH                    = 22
+	bitW                    = 16
+	bitH                    = 18
 	dataWidth               = 32
 	maxRow                  = 5
 	Row                     = 1
@@ -503,15 +503,16 @@ func NewColorSelect(m *MainForm) *ColorSelect {
 		fltk.Color(0x8A2BE200), fltk.Color(0x8B451300), fltk.Color(0x8FBC8F00),
 		fltk.Color(0x90EE9000), fltk.Color(0x9932CC00), fltk.Color(0x9400D300),
 		fltk.Color(0x9ACD3200), fltk.Color(0xA0522D00), fltk.Color(0xA52A2A00),
-		fltk.Color(0xADD8E600), fltk.Color(0xB2222200), fltk.Color(0xB8860B00),
-		fltk.Color(0x00800000), fltk.Color(0xC7158500), fltk.Color(0x00BFFF00),
-		fltk.Color(0x00Fe7e00), fltk.Color(0xEEE8AA00), fltk.Color(0x69696900),
-		fltk.Color(0xFFFFF000), fltk.Color(0xFFEFD500), fltk.Color(0xFFD70000),
+		fltk.Color(0xADD8E600), fltk.Color(0xFFD70000),
+		// fltk.Color(0xB8860B00),
+		// fltk.Color(0x00800000), fltk.Color(0xC7158500), fltk.Color(0x00BFFF00),
+		// fltk.Color(0x00Fe7e00), fltk.Color(0xEEE8AA00), fltk.Color(0x69696900),
+		// fltk.Color(0xFFFFF000), fltk.Color(0xFFEFD500), fltk.Color(0xB2222200),
 	}
 	idx := 0
 	for r := 0; r < 2; r++ {
-		for c := 0; c < 26; c++ {
-			box := fltk.NewButton((pad+15)*c+pad*15+304, pad*r+r*15, 15, 15)
+		for c := 0; c < 21; c++ {
+			box := fltk.NewButton((pad+15)*c+pad*13+304, pad*r+r*15, 15, 15)
 			box.SetColor(colorCode[idx])
 			box.SetBox(fltk.BORDER_BOX)
 			box.SetDownBox(fltk.BORDER_BOX)
@@ -807,30 +808,30 @@ func NewMainForm(w *fltk.Window) {
 		}
 	}
 	mainForm.BitRows = bitRows
-	box := NewBox(fltk.GTK_UP_BOX, WIDTH-195, 18, 118, 25, 12, "进制", fltk.WHITE)
+	box := NewBox(fltk.GTK_UP_BOX, WIDTH-189, 18, 118, 25, 12, "进制", fltk.WHITE)
 	box.SetAlign(fltk.ALIGN_TOP)
-	base16 := NewRadioRoundButton(WIDTH-190, pad*11+1, 16, 16, 16, "16", mainForm.BaseChoise)
+	base16 := NewRadioRoundButton(WIDTH-184, pad*11+1, 16, 16, 16, "16", mainForm.BaseChoise)
 	mainForm.Base16 = base16
-	base10 := NewRadioRoundButton(WIDTH-150, pad*11+1, 16, 16, 10, "10", mainForm.BaseChoise)
+	base10 := NewRadioRoundButton(WIDTH-144, pad*11+1, 16, 16, 10, "10", mainForm.BaseChoise)
 	mainForm.Base10 = base10
-	base8 := NewRadioRoundButton(WIDTH-110, pad*11+1, 16, 16, 8, "8", mainForm.BaseChoise)
+	base8 := NewRadioRoundButton(WIDTH-104, pad*11+1, 16, 16, 8, "8", mainForm.BaseChoise)
 	mainForm.Base8 = base8
-	addR := NewButton(WIDTH-72, pad-1, 60, 20, "增加一行", mainForm.Add)
-	rmR := NewButton(WIDTH-72, pad+21, 60, 20, "删除一行", mainForm.Remove)
+	addR := NewButton(WIDTH-66, pad-1, 60, 20, "增加一行", mainForm.Add)
+	rmR := NewButton(WIDTH-66, pad+21, 60, 20, "删除一行", mainForm.Remove)
 	rmR.Deactivate()
 	mainForm.AddRow = addR
 	mainForm.RmRow = rmR
-	ontop := NewToggleButton(pad*6, pad*4, 35, 20, "置顶")
+	ontop := NewToggleButton(pad*3, pad*4, 35, 20, "置顶")
 	ontop.SetCallback(mainForm.SetOnTop)
 	base16.SetValue(true)
 	mainForm.ontop = ontop
-	mlSwitch := NewToggleButton(pad*7+35, pad*4, 35, 20, "MSB")
+	mlSwitch := NewToggleButton(pad*4+35, pad*4, 35, 20, "MSB")
 	mlSwitch.SetCallback(mainForm.MLSwitch)
-	rangeParse := NewToggleButton(pad*8+70, pad*4, 60, 20, "位域解析")
+	rangeParse := NewToggleButton(pad*5+70, pad*4, 60, 20, "位域解析")
 	analyzeArea := NewBitAnalyze()
 	analyzeArea.input.SetEventHandler(mainForm.Edit)
 	rangeParse.SetCallback(mainForm.Analyze)
-	bitColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*12+130, pad*6, 12, 12)
+	bitColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*9+130, pad*6, 12, 12)
 	bitColorBox.SetColor(bitColorMap["1"])
 	colorDia := NewColorSelect(mainForm)
 	callBack := func(i int) func() {
@@ -844,10 +845,10 @@ func NewMainForm(w *fltk.Window) {
 			}
 		}
 	}
-	bitColorSel := NewButton(pad*9+150, pad*4, 60, 20, "颜色选择", callBack(0))
-	headerColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*13+210, pad*6, 12, 12)
+	bitColorSel := NewButton(pad*6+150, pad*4, 60, 20, "颜色选择", callBack(0))
+	headerColorBox := fltk.NewBox(fltk.BORDER_BOX, pad*10+210, pad*6, 12, 12)
 	headerColorBox.SetColor(headerColorMap[14])
-	headerColorSel := NewButton(pad*10+230, pad*4, 80, 20, "对比颜色选择", callBack(1))
+	headerColorSel := NewButton(pad*7+230, pad*4, 80, 20, "对比颜色选择", callBack(1))
 	mainForm.BitColorSel = bitColorSel
 	mainForm.BitColorBox = bitColorBox
 	mainForm.HeaderColorSel = headerColorSel
