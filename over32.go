@@ -34,10 +34,13 @@ var (
 	pad                     = 2
 	bitW                    = 16
 	bitH                    = 18
-	dataWidth               = 32
+	dataWidth               = 64
 	maxRow                  = 5
 	Row                     = 1
-	WIDTH                   = dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad + pad*7 + bitW*13 + 50
+	DisplayNumW             = bitW * 6 * int(dataWidth/32)
+	ShiftNumW               = bitW
+	ButtonW                 = bitW * 2
+	WIDTH                   = dataWidth*bitW + ButtonW*5 + ShiftNumW + DisplayNumW + pad*(dataWidth/4*5+8)
 	HEIGHT                  = bitW + Row*bitH + pad*(3+Row) + 28
 	maxHeight               = bitW + maxRow*bitH + pad*(3+maxRow) + 42 + bitH
 	MaxNum, _               = big.NewInt(0).SetString(strings.Repeat("1", dataWidth), 2)
@@ -251,8 +254,8 @@ func (b *BitRow) DisplayClick(e fltk.Event) bool {
 func (b *BitRow) ClickLShift(fn, fnc func()) func() {
 	return func() {
 		shiftNum := b.GetCurrentNum()
-		b.bigInt = *b.bigInt.Lsh(&b.bigInt, uint(shiftNum))
-		b.bigInt = *b.bigInt.And(&b.bigInt, MaxNum)
+		b.bigInt.Lsh(&b.bigInt, uint(shiftNum))
+		b.bigInt.And(&b.bigInt, MaxNum)
 		b.UpdateBitNum()
 		b.Display()
 		fn()
@@ -263,8 +266,8 @@ func (b *BitRow) ClickLShift(fn, fnc func()) func() {
 func (b *BitRow) ClickRShift(fn, fnc func()) func() {
 	return func() {
 		shiftNum := b.GetCurrentNum()
-		b.bigInt = *b.bigInt.Rsh(&b.bigInt, uint(shiftNum))
-		b.bigInt = *b.bigInt.And(&b.bigInt, MaxNum)
+		b.bigInt.Rsh(&b.bigInt, uint(shiftNum))
+		b.bigInt.And(&b.bigInt, MaxNum)
 		b.UpdateBitNum()
 		fn()
 		fnc()
@@ -298,15 +301,18 @@ func (b *BitRow) KeyType(fn, fnc func()) func(fltk.Event) bool {
 			b.Display()
 		}
 		if e == fltk.KEYUP {
-			old := b.bigInt
+			old := b.bigInt.Text(b.base)
 			str := b.num.Value()
-			bigInt, _ := b.bigInt.SetString(str, b.base)
-			if bigInt.Cmp(MaxNum) != 1 {
-				b.bigInt = *bigInt
+			if str == "" {
+				b.bigInt.SetString("0", b.base)
 			} else {
-				b.bigInt = old
+				bigInt, ok := b.bigInt.SetString(str, b.base)
+				if !ok || bigInt.Cmp(MaxNum) == 1 {
+					b.bigInt.SetString(old, b.base)
+				}
 			}
 			b.UpdateBit()
+			b.SetNum()
 			fn()
 			fnc()
 			b.Display()
@@ -391,22 +397,22 @@ func NewBitRow(row int, fn, fnc func()) *BitRow {
 	}
 	bitsWidth := dataWidth*bitW + dataWidth/4*pad*2 + (dataWidth+1)*pad
 	bitRow.bitLocs = bitLocs
-	num := NewInput(bitsWidth, h, bitW*6, bitH, "0")
+	num := NewInput(bitsWidth, h, DisplayNumW, bitH, "0")
 	num.SetEventHandler(bitRow.KeyType(fn, fnc))
 	bitRow.num = num
-	lShift := NewButton(bitsWidth+pad+bitW*6, h, 25, bitH, "<<", bitRow.ClickLShift(fn, fnc))
+	lShift := NewButton(bitsWidth+pad+DisplayNumW, h, 25, bitH, "<<", bitRow.ClickLShift(fn, fnc))
 	bitRow.lShift = lShift
-	shiftNum := NewInput(bitsWidth+pad*2+bitW*6+25, h, bitW, bitH, "1")
+	shiftNum := NewInput(bitsWidth+pad*2+DisplayNumW+25, h, bitW, bitH, "1")
 	shiftNum.SetEventHandler(bitRow.ShiftNumEvent)
 	shiftNum.Hide()
 	bitRow.shiftNum = shiftNum
-	rShift := NewButton(bitsWidth+pad*3+bitW*7+25, h, 25, bitH, ">>", bitRow.ClickRShift(fn, fnc))
+	rShift := NewButton(bitsWidth+pad*3+DisplayNumW+bitW+25, h, 25, bitH, ">>", bitRow.ClickRShift(fn, fnc))
 	bitRow.rShift = rShift
-	reverse := NewButton(bitsWidth+pad*4+bitW*7+50, h, bitW*2, bitH, "倒序", bitRow.ClickReverse(fn, fnc))
+	reverse := NewButton(bitsWidth+pad*4+DisplayNumW+bitW+50, h, bitW*2, bitH, "倒序", bitRow.ClickReverse(fn, fnc))
 	bitRow.reverse = reverse
-	invert := NewButton(bitsWidth+pad*5+bitW*9+50, h, bitW*2, bitH, "转换", bitRow.ClickInvert(fn, fnc))
+	invert := NewButton(bitsWidth+pad*5+DisplayNumW+bitW*2+50, h, bitW*2, bitH, "转换", bitRow.ClickInvert(fn, fnc))
 	bitRow.invert = invert
-	clear := NewButton(bitsWidth+pad*6+bitW*11+50, h, bitW*2, bitH, "清空", bitRow.ClickClear(fn, fnc))
+	clear := NewButton(bitsWidth+pad*6+DisplayNumW+bitW*4+50, h, bitW*2, bitH, "清空", bitRow.ClickClear(fn, fnc))
 	bitRow.clear = clear
 	bitRow.base = 16
 	bitRow.lastShiftNum = 1
