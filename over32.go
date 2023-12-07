@@ -40,7 +40,7 @@ var (
 	DisplayNumW             = bitW * 6 * int(dataWidth/32)
 	ShiftNumW               = bitW
 	ButtonW                 = bitW * 2
-	WIDTH                   = dataWidth*bitW + ButtonW*5 + ShiftNumW + DisplayNumW + pad*(dataWidth/4*5+8)
+	WIDTH                   = dataWidth*bitW + ButtonW*5 + ShiftNumW + DisplayNumW + (dataWidth/4*6+1)*pad
 	HEIGHT                  = bitW + Row*bitH + pad*(3+Row) + 28
 	maxHeight               = bitW + maxRow*bitH + pad*(3+maxRow) + 42 + bitH
 	MaxNum, _               = big.NewInt(0).SetString(strings.Repeat("1", dataWidth), 2)
@@ -218,8 +218,8 @@ func (b *BitRow) UpdateBit() {
 func (b *BitRow) UpdateNum() {
 	binStr := b.GetBitString()
 	str := strings.Join(binStr, "")
-	binInt, _ := b.bigInt.SetString(str, 2)
-	b.bigInt = *binInt
+	b.bigInt.SetString(str, 2)
+	b.SetNum()
 }
 
 func (b *BitRow) UpdateBitNum() {
@@ -405,18 +405,18 @@ func NewBitRow(row int, fn, fnc func()) *BitRow {
 	shiftNum := NewInput(bitsWidth+pad*2+DisplayNumW+25, h, bitW, bitH, "1")
 	shiftNum.SetEventHandler(bitRow.ShiftNumEvent)
 	shiftNum.Hide()
+	bitRow.lastShiftNum = 1
+	shiftDisplay := NewBox(fltk.BORDER_BOX, bitsWidth+pad*2+DisplayNumW+25, h, bitW, bitH, 14, fmt.Sprint(bitRow.lastShiftNum), fltk.WHITE)
 	bitRow.shiftNum = shiftNum
 	rShift := NewButton(bitsWidth+pad*3+DisplayNumW+bitW+25, h, 25, bitH, ">>", bitRow.ClickRShift(fn, fnc))
 	bitRow.rShift = rShift
-	reverse := NewButton(bitsWidth+pad*4+DisplayNumW+bitW+50, h, bitW*2, bitH, "倒序", bitRow.ClickReverse(fn, fnc))
+	reverse := NewButton(bitsWidth+pad*4+DisplayNumW+bitW+50, h, ButtonW, bitH, "倒序", bitRow.ClickReverse(fn, fnc))
 	bitRow.reverse = reverse
-	invert := NewButton(bitsWidth+pad*5+DisplayNumW+bitW*2+50, h, bitW*2, bitH, "转换", bitRow.ClickInvert(fn, fnc))
+	invert := NewButton(bitsWidth+pad*5+DisplayNumW+bitW+ButtonW+50, h, ButtonW, bitH, "转换", bitRow.ClickInvert(fn, fnc))
 	bitRow.invert = invert
-	clear := NewButton(bitsWidth+pad*6+DisplayNumW+bitW*4+50, h, bitW*2, bitH, "清空", bitRow.ClickClear(fn, fnc))
+	clear := NewButton(bitsWidth+pad*6+DisplayNumW+bitW+ButtonW*2+50, h, ButtonW, bitH, "清空", bitRow.ClickClear(fn, fnc))
 	bitRow.clear = clear
 	bitRow.base = 16
-	bitRow.lastShiftNum = 1
-	shiftDisplay := NewBox(fltk.BORDER_BOX, bitsWidth+pad*2+bitW*6+25, h, bitW, bitH, 14, fmt.Sprint(bitRow.lastShiftNum), fltk.WHITE)
 	shiftDisplay.SetEventHandler(bitRow.DisplayClick)
 	bitRow.shiftNumDisplay = shiftDisplay
 	bitRow.bigInt = *big.NewInt(0)
