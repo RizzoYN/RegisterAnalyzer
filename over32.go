@@ -697,24 +697,18 @@ func (m *MainForm) Analyze() {
 	m.AnalyzeAreaChange()
 }
 
-func (m *MainForm) SetNum(num int64, r int32) {
-	switch m.base {
-	case 16:
-		m.AnalyzeArea.res[r].SetValue(fmt.Sprintf("%x", num))
-	case 10:
-		m.AnalyzeArea.res[r].SetValue(fmt.Sprint(num))
-	case 8:
-		m.AnalyzeArea.res[r].SetValue(fmt.Sprintf("%o", num))
-	}
+func (m *MainForm) SetNum(num *big.Int, r int) {
+	m.AnalyzeArea.res[r].SetValue(num.Text(m.base))
 }
 
-func (m *MainForm) ParseBitRange(nums []string, r int32) (int64, error) {
+func (m *MainForm) ParseBitRange(nums []string, r int32) (*big.Int, error) {
 	var res []string
+	bigI := big.NewInt(0)
 	if len(nums) == 1 {
 		left := strings.Trim(nums[0], "\r\n")
 		num, err := strconv.ParseInt(left, 10, 0)
 		if err != nil || num >= int64(dataWidth) {
-			return 0, fmt.Errorf("无效输入")
+			return bigI, fmt.Errorf("无效输入")
 		}
 		for c := 0; c < dataWidth; c++ {
 			if m.Headers[c].Label() == left {
@@ -722,21 +716,21 @@ func (m *MainForm) ParseBitRange(nums []string, r int32) (int64, error) {
 				res = append(res, str)
 			}
 		}
-		bin, _ := strconv.ParseInt(strings.Join(res, ""), 2, dataWidth*2)
-		return bin, nil
+		bigI.SetString(strings.Join(res, ""), 2)
+		return bigI, nil
 	} else if len(nums) == 2 {
 		left := strings.Trim(nums[0], "\r\n")
 		right := strings.Trim(nums[1], "\r\n")
 		numL, errL := strconv.ParseInt(left, 10, 0)
 		if errL != nil || numL >= int64(dataWidth) {
-			return 0, fmt.Errorf("无效输入")
+			return bigI, fmt.Errorf("无效输入")
 		}
 		numR, errR := strconv.ParseInt(right, 10, 0)
 		if errR != nil || numR >= int64(dataWidth) {
-			return 0, fmt.Errorf("无效输入")
+			return bigI, fmt.Errorf("无效输入")
 		}
 		if numR == numL {
-			return 0, fmt.Errorf("无效输入")
+			return bigI, fmt.Errorf("无效输入")
 		}
 		flag := false
 		for c := 0; c < dataWidth; c++ {
@@ -754,10 +748,10 @@ func (m *MainForm) ParseBitRange(nums []string, r int32) (int64, error) {
 				res = append(res, str)
 			}
 		}
-		bin, _ := strconv.ParseInt(strings.Join(res, ""), 2, dataWidth*2)
-		return bin, nil
+		bigI.SetString(strings.Join(res, ""), 2)
+		return bigI, nil
 	} else {
-		return 0, fmt.Errorf("无效输入")
+		return bigI, fmt.Errorf("无效输入")
 	}
 }
 
@@ -774,7 +768,7 @@ func (m *MainForm) UpdateAnalyzeRes(r int) {
 			output.SetColor(fltk.WHITE)
 		}
 	} else {
-		m.SetNum(num, int32(r))
+		m.SetNum(num, r)
 		output.SetColor(fltk.WHITE)
 	}
 	output.Redraw()
