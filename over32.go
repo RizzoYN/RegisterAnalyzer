@@ -128,16 +128,17 @@ func ParseHeight(row int) int {
 func SetOntop(ontop bool) {
 	swpNoSize := 0x1
 	swpNoMove := 0x2
-	flag := swpNoSize | swpNoMove
+	flag := uintptr(swpNoSize | swpNoMove)
 	hwnd, _, _ := procGetForegroundWindow.Call()
+	param := uintptr(0)
 	if ontop {
 		topMost := -1
-		procSetWindowPos.Call(hwnd, uintptr(topMost), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
+		procSetWindowPos.Call(hwnd, uintptr(topMost), param, param, param, param, flag)
 	} else {
 		bottom := 1
 		top := 0
-		procSetWindowPos.Call(hwnd, uintptr(bottom), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
-		procSetWindowPos.Call(hwnd, uintptr(top), uintptr(0), uintptr(0), uintptr(0), uintptr(0), uintptr(flag))
+		procSetWindowPos.Call(hwnd, uintptr(bottom), param, param, param, param, flag)
+		procSetWindowPos.Call(hwnd, uintptr(top), param, param, param, param, flag)
 	}
 }
 
